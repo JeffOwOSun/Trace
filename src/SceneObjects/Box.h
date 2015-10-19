@@ -16,6 +16,7 @@ public:
 	virtual bool hasBoundingBoxCapability() const { return true; }
     virtual BoundingBox ComputeLocalBoundingBox()
     {
+		// a box of edge length 1
         BoundingBox localbounds;
         localbounds.max = vec3f(0.5, 0.5, 0.5);
 		localbounds.min = vec3f(-0.5, -0.5, -0.5);
