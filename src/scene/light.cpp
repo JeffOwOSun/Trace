@@ -55,3 +55,24 @@ vec3f PointLight::shadowAttenuation(const vec3f& P) const
     // You should implement shadow-handling code here.
     return vec3f(1,1,1);
 }
+
+double AmbientLight::distanceAttenuation(const vec3f& P) const
+{
+	return 1.0;
+}
+
+vec3f AmbientLight::getColor(const vec3f& P) const
+{
+	return color;
+}
+
+vec3f AmbientLight::getDirection(const vec3f& P) const
+{
+	return vec3f(1, 1, 1);
+}
+
+
+vec3f AmbientLight::shadowAttenuation(const vec3f& P) const
+{
+	return vec3f(1, 1, 1);
+}
