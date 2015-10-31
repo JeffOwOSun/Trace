@@ -27,17 +27,22 @@ vec3f Material::shade( Scene *scene, const ray& r, const isect& i ) const
 	// Iteration 1
 	const vec3f point = r.at(i.t);
 	const vec3f ambient = scene->getAmbient();
-	result += vec3f(ka[0] * ambient[0], ka[1] * ambient[1], ka[2] * ambient[2]);
+	result += prod(ka, ambient);
 
 	// Iteration 2
-	for (Scene::cliter j = scene->beginLights(); j != scene->endLights; ++j) 
+	for (Scene::cliter j = scene->beginLights(); j != scene->endLights(); ++j) 
 	{
 		vec3f light = (*j)->getColor(point);
-		vec3f diffuse(kd[0] * light[0], kd[1] * light[1], kd[2] * light[2]);
-		double angle = max(i.N.dot((*j)->getDirection(point)), 0.0);
-		result += diffuse * angle;
-		break;
-	}
 
+		double angle = max(i.N.dot((*j)->getDirection(point)), 0.0);
+		vec3f diffuse = kd * angle;
+
+		double atten = (*j)->distanceAttenuation(point);
+		vec3f R = (2 * (i.N.dot((*j)->getDirection(point))) * i.N) - (*j)->getDirection(point);
+		vec3f specular = ks*pow(max<double>(R*((*j)->getDirection(point)), 0.0), shininess*128.0);
+		result += prod(atten*light, specular+diffuse);
+	}
+	result = result.clamp();
+	
 	return result;
 }
