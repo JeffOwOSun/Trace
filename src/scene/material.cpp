@@ -37,10 +37,10 @@ vec3f Material::shade( Scene *scene, const ray& r, const isect& i ) const
 		double angle = max(i.N.dot((*j)->getDirection(point)), 0.0);
 		vec3f diffuse = kd * angle;
 
-		double atten = (*j)->distanceAttenuation(point);
+		vec3f atten = (*j)->distanceAttenuation(point) * (*j)->shadowAttenuation(point);
 		vec3f R = (2 * (i.N.dot((*j)->getDirection(point))) * i.N) - (*j)->getDirection(point);
 		vec3f specular = ks*pow(max<double>(R*((*j)->getDirection(point)), 0.0), shininess*128.0);
-		result += prod(atten*light, specular+diffuse);
+		result += prod(prod(atten, light), specular+diffuse);
 	}
 	result = result.clamp();
 	
