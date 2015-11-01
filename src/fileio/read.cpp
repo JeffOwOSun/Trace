@@ -516,7 +516,8 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 		throw ParseError( string( oss.str() ) );
 	}
 
-	if( name == "directional_light" ) {
+	if( name == "directional_light" ) 
+	{
 		if( child == NULL ) {
 			throw ParseError( "No info for directional_light" );
 		}
@@ -524,15 +525,41 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 		scene->add( new DirectionalLight( scene, 
 			tupleToVec( getField( child, "direction" ) ).normalize(),
 			tupleToVec( getColorField( child ) ) ) );
-	} else if( name == "point_light" ) {
+	} 
+	else if( name == "point_light" ) 
+	{
 		if( child == NULL ) {
 			throw ParseError( "No info for point_light" );
 		}
+		PointLight* light = new PointLight(scene,
+			tupleToVec(getField(child, "position")),
+			tupleToVec(getColorField(child)));
 
-		scene->add( new PointLight( scene, 
-			tupleToVec( getField( child, "position" ) ),
-			tupleToVec( getColorField( child ) ) ) );
-	} else if( 	name == "sphere" ||
+		scene->add(light);
+
+		if (hasField(child, "constant_attenuation_coeff") && hasField(child, "linear_attenuation_coeff")
+			&& hasField(child, "quadratic_attenuation_coeff"))
+		{
+			light->setDistanceAttenuation(
+				getField(child, "constant_attenuation_coeff")->getScalar(),
+				getField(child, "linear_attenuation_coeff")->getScalar(),
+				getField(child, "quadratic_attenuation_coeff")->getScalar());
+		}
+
+	}
+	else if (name == "ambient_light") 
+	{
+		if (child == NULL) {
+			throw ParseError("No info for ambient_light");
+		}
+		// may be add function is not necessary
+		// I'm sleeply, let me think about it tomorrow
+		scene->add(new AmbientLight(scene,
+			vec3f(1,1,1),
+			tupleToVec(getColorField(child))));
+		scene->setAmbient(tupleToVec(getColorField(child)));
+	}
+	else if( 	name == "sphere" ||
 				name == "box" ||
 				name == "cylinder" ||
 				name == "cone" ||
@@ -542,14 +569,20 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 				name == "scale" ||
 				name == "transform" ||
                 name == "trimesh" ||
-                name == "polymesh") { // polymesh is for backwards compatibility.
+                name == "polymesh") 
+	{ // polymesh is for backwards compatibility.
 		processGeometry( name, child, scene, materials, &scene->transformRoot);
 		//scene->add( geo );
-	} else if( name == "material" ) {
+	} 
+	else if( name == "material" ) 
+	{
 		processMaterial( child, &materials );
-	} else if( name == "camera" ) {
+	} 
+	else if( name == "camera" ) 
+	{
 		processCamera( child, scene );
-	} else {
+	} else 
+	{
 		throw ParseError( string( "Unrecognized object: " ) + name );
 	}
 }
