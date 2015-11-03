@@ -33,7 +33,6 @@ bool Box::intersectLocal(const ray& r, isect& i) const
 		N1[axis] = -1;
 		double t2 = (uBound - ori[axis]) / dir[axis];
 		N2[axis] = 1;
-
 		//make sure t1 is the intersection with near plane
 		if (t1 > t2) {
 			double t = t1;

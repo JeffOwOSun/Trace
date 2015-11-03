@@ -74,7 +74,9 @@ bool Cone::intersectBody( const ray& r, isect& i ) const
 	
 		if( !capped && (i.N).dot( r.getDirection() ) > 0 )
 				i.N = -i.N;
-
+#ifdef _DEBUG
+		printf("one intersection!\n");
+#endif
         return true;
 	}
 

@@ -75,7 +75,6 @@ vec3f PointLight::shadowAttenuation(const vec3f& P) const
 
 	// distance from P to this light
 	double distance = (position - P).length();
-
 	// loop to get the attenuation
 	vec3f curP = P;
 	isect isecP;
