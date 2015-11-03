@@ -53,10 +53,12 @@ bool Cone::intersectBody( const ray& r, isect& i ) const
 		if( z >= 0.0 && z <= height ) {
 			// It's okay.
 			i.t = t1;
-            i.N = vec3f( P[0], P[1], 
-              -(C*P[2]+(t_radius-b_radius)*t_radius/height)).normalize();
+			double p3 = -C*P[2] + (b_radius - t_radius)*b_radius / height;
+            i.N = vec3f( P[0], P[1], p3).normalize();
 				
-			
+#ifdef _DEBUG
+			printf("two intersections!\n");
+#endif
 			return true;
 		}
 	}
@@ -65,15 +67,17 @@ bool Cone::intersectBody( const ray& r, isect& i ) const
 	double z = P[2];
 	if( z >= 0.0 && z <= height ) {
 		i.t = t2;
-        i.N = vec3f( P[0], P[1], 
-              -(C*P[2]+(t_radius-b_radius)*t_radius/height)).normalize();
+		double p3 = -C*P[2] + (b_radius - t_radius)*b_radius / height;
+        i.N = vec3f( P[0], P[1], p3).normalize();
 		// In case we are _inside_ the _uncapped_ cone, we need to flip the normal.
 		// Essentially, the cone in this case is a double-sided surface
 		// and has _2_ normals
 	
 		if( !capped && (i.N).dot( r.getDirection() ) > 0 )
 				i.N = -i.N;
-
+#ifdef _DEBUG
+		printf("one intersection!\n");
+#endif
         return true;
 	}
 
