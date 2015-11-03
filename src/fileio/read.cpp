@@ -305,9 +305,12 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 		if( name == "sphere" ) {
 			obj = new Sphere( scene, mat );
 		} else if( name == "box" ) {
-			obj = new Box( scene, mat );
+			obj = new Box( scene, mat ); 		
 		} else if( name == "cylinder" ) {
-			obj = new Cylinder( scene, mat );
+			// Similar as cone, cylinder can also be capped
+			bool capped = true;
+			maybeExtractField(child, "capped", capped);
+			obj = new Cylinder(scene, mat, capped);
 		} else if( name == "cone" ) {
 			double height = 1.0;
 			double bottom_radius = 1.0;
@@ -325,6 +328,7 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 		}
 
         obj->setTransform(transform);
+		scene->giveOrder(obj);
 		scene->add(obj);
 	}
 }

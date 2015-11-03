@@ -14,7 +14,7 @@ public:
 
 	virtual bool intersectLocal( const ray& r, isect& i ) const;
 	virtual bool hasBoundingBoxCapability() const { return true; }
-
+	virtual bool hasInterior() const{ return capped; }
     virtual BoundingBox ComputeLocalBoundingBox()
     {
         BoundingBox localbounds;
