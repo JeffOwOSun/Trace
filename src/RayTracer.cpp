@@ -20,6 +20,8 @@ vec3f RayTracer::trace( Scene *scene, double x, double y )
 {
     ray r( vec3f(0,0,0), vec3f(0,0,0) );
     scene->getCamera()->rayThrough( x,y,r );
+	
+	mediaHistory.clear();
 	return traceRay( scene, r, vec3f(1.0,1.0,1.0), 0 ).clamp();
 }
 
@@ -31,48 +33,123 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 	isect i;
 
 	if( scene->intersect( r, i ) ) {
-		// YOUR CODE HERE
-
-		// An intersection occured!  We've got work to do.  For now,
-		// this code gets the material for the surface that was intersected,
-		// and asks that material to provide a color for the ray.  
-
-		// This is a great place to insert code for recursive ray tracing.
-		// Instead of just returning the result of shade(), add some
-		// more steps: add in the contributions from reflected and refracted
-		// rays.
 
 		const Material& m = i.getMaterial();
-		const vec3f shade = m.shade(scene, r, i);
+		vec3f shade = m.shade(scene, r, i);
+		if (depth >= traceUI->getDepth()) 
+			return shade;
 
-		vec3f reflection;
-		if (!m.kr.iszero() && depth < (traceUI->getDepth()))
+		vec3f conPoint = r.at(i.t); 
+		vec3f normal;
+		vec3f Rdir = 2 * (i.N*-r.getDirection()) * i.N - (-r.getDirection());
+		ray R = ray(conPoint, Rdir);
+		
+		// Reflection part
+		if (!i.getMaterial().kr.iszero()) 
 		{
-			// As illustrated in the book, we should always push out 
-			// the intersect point a little bit to avoid self-reflection
-			const vec3f &out_point = r.at(i.t);
-			const double dotRN = i.N.dot(-r.getDirection());
-			const vec3f &reflection_dir = 2.0 * dotRN * i.N - (-r.getDirection()).normalize();
-			ray n_r(out_point, reflection_dir);
-			const vec3f next_thresh(thresh[0] * m.kr[0], thresh[1] * m.kr[1], thresh[2] * m.kr[2]);
-			reflection = traceRay(scene, n_r, next_thresh, depth + 1);
+			shade += prod(i.getMaterial().kr, traceRay(scene, R, thresh, depth + 1));
 		}
-		const vec3f threshed_shade = prod(shade, thresh);
-
-		return (reflection + threshed_shade).clamp();
-
-
 	
-	} else {
-		// No intersection.  This ray travels to infinity, so we color
-		// it according to the background color, which in this (simple) case
-		// is just black.
+		// Refraction part
+		// We maintain a map, this map has order so it can be simulated as a extended stack		  
+		if (!i.getMaterial().kt.iszero())
+		{
+			// take account total refraction effect
+			bool TotalRefraction = false; 
+			// opposite ray
+			ray oppR(conPoint, r.getDirection()); //without refraction
+			
+			// marker to simulate a stack
+			bool toAdd = false, toErase = false;
 
-		return vec3f( 0.0, 0.0, 0.0 );
+			// For now, the interior is just hardcoded
+			// That is, we judge it according to cap and whether it is box
+			if (i.obj->hasInterior())
+			{
+				// refractive index
+				double indexA, indexB;
+
+				// For ray go out of an object
+				if (i.N*r.getDirection() > RAY_EPSILON)
+				{
+					if (mediaHistory.empty())
+					{
+						indexA = 1.0;
+					}
+					else
+					{
+						// return the refractive index of last object
+						indexA = mediaHistory.rbegin()->second.index;
+					}
+
+					mediaHistory.erase(i.obj->getOrder());
+					toAdd = true;
+					if (mediaHistory.empty())
+					{
+						indexB = 1.0;
+					}
+					else 
+					{
+						indexB = mediaHistory.rbegin()->second.index;
+					}
+					normal = -i.N;
+				}
+				// For ray get in the object
+				else 
+				{
+					if (mediaHistory.empty())
+					{
+						indexA = 1.0;
+					}
+					else
+					{
+						indexA = mediaHistory.rbegin()->second.index;
+					}
+					mediaHistory.insert(make_pair(i.obj->getOrder(), i.getMaterial()));
+					toErase = true;
+					indexB = mediaHistory.rbegin()->second.index;
+					normal = i.N;
+				}
+
+				double indexRatio = indexA / indexB;
+				double cos_i = normal*((-r.getDirection()).normalize());
+				double sin_i = sqrt(1 - cos_i*cos_i);
+				double sin_t = sin_i * indexRatio; 
+
+				if (sin_t > 1.0 + RAY_EPSILON)
+				{
+					TotalRefraction = true;
+				}
+				else 
+				{
+					TotalRefraction = false;
+					double cos_t = sqrt(1 - sin_t*sin_t);
+					vec3f Tdir = (indexRatio*cos_i - cos_t)*normal - indexRatio*-r.getDirection();
+					oppR = ray(conPoint, Tdir);
+					shade += prod(i.getMaterial().kt, traceRay(scene, oppR, thresh, depth + 1));
+				}
+			}
+			
+			if (toAdd) 
+			{
+				mediaHistory.insert(make_pair(i.obj->getOrder(), i.getMaterial()));
+			}
+			if (toErase)
+			{
+				mediaHistory.erase(i.obj->getOrder());
+			}
+		}
+		shade = shade.clamp();
+		return shade;
+
+	}
+	else {
+		return vec3f(0.0, 0.0, 0.0);
 	}
 }
 
-RayTracer::RayTracer()
+RayTracer::RayTracer() : 
+mediaHistory()
 {
 	buffer = NULL;
 	buffer_width = buffer_height = 256;
