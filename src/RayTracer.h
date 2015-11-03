@@ -5,6 +5,7 @@
 
 #include "scene/scene.h"
 #include "scene/ray.h"
+#include <map>
 
 class RayTracer
 {
@@ -31,7 +32,7 @@ private:
 	int buffer_width, buffer_height;
 	int bufferSize;
 	Scene *scene;
-
+	std::map<int, Material> mediaHistory;
 	bool m_bSceneLoaded;
 };
 

@@ -328,6 +328,7 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 		}
 
         obj->setTransform(transform);
+		scene->giveOrder(obj);
 		scene->add(obj);
 	}
 }
