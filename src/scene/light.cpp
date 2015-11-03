@@ -11,17 +11,30 @@ double DirectionalLight::distanceAttenuation( const vec3f& P ) const
 
 vec3f DirectionalLight::shadowAttenuation( const vec3f& P ) const
 {
-	const vec3f &dir = getDirection(P);
-	isect i;
-	ray R(P, dir);
-	if (scene->intersect(R, i))
-	{
-		return vec3f();
+	vec3f d = getDirection(P);
+
+	// loop to get the attenuation
+	vec3f curP = P;
+	isect isecP;
+	vec3f ret = getColor(P);
+	ray r = ray(curP, d);
+	bool skip = false; //used to skip the second intersection upon the same geometry
+	while (scene->intersect(r, isecP)){
+		//if not transparent return black
+		if (isecP.getMaterial().kt.iszero())return vec3f(0, 0, 0);
+		//use current intersection point as new light source
+		curP = r.at(isecP.t);
+		r = ray(curP, d);
+		if (!skip) {
+			ret = prod(ret, isecP.getMaterial().kt);
+			skip = true;
+		}
+		else {
+			skip = false;
+		}
 	}
-	else
-	{
-		return vec3f(1.0, 1.0, 1.0);
-	}
+
+	return ret;
 }
 
 vec3f DirectionalLight::getColor( const vec3f& P ) const
@@ -65,25 +78,38 @@ vec3f PointLight::getDirection( const vec3f& P ) const
 
 vec3f PointLight::shadowAttenuation(const vec3f& P) const
 {
-	const vec3f &dir = getDirection(P);
-	isect i;
-	ray R(P, dir);
-	if (scene->intersect(R, i))
-	{
-		const double light_t = (position - P).length();
-		if (i.t < light_t)
-		{
-			return vec3f();
-		}
-		else
-		{
-			return vec3f(1.0, 1.0, 1.0);
+	// YOUR CODE HERE:  
+	// You should implement shadow-handling code here.  
+	// direction from P to this light
+	vec3f d = getDirection(P);
+	
+	// distance from P to this light
+	double distance = (position - P).length();
+	
+	// loop to get the attenuation
+	vec3f curP = P;
+	isect isecP;
+	vec3f ret = getColor(P);
+	ray r = ray(curP, d);
+	bool skip = false; //used to skip the second intersection upon the same geometry
+	while (scene->intersect(r, isecP)){
+		//prevent going beyond this light
+		if ((distance -= isecP.t) < RAY_EPSILON) return ret;
+		//if not transparent return black
+		if (isecP.getMaterial().kt.iszero())return vec3f(0, 0, 0);
+		//use current intersection point as new light source
+		curP = r.at(isecP.t);
+		r = ray(curP, d);
+		if (!skip) {
+			ret = prod(ret, isecP.getMaterial().kt);
+			skip = true;
+		} else {
+			skip = false;
 		}
 	}
-	else
-	{
-		return vec3f(1.0, 1.0, 1.0);
-	}
+
+
+	return ret;
 }
 
 
