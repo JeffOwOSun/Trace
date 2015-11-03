@@ -11,17 +11,30 @@ double DirectionalLight::distanceAttenuation( const vec3f& P ) const
 
 vec3f DirectionalLight::shadowAttenuation( const vec3f& P ) const
 {
-	const vec3f &dir = getDirection(P);
-	isect i;
-	ray R(P, dir);
-	if (scene->intersect(R, i))
-	{
-		return vec3f();
+	vec3f d = getDirection(P);
+
+	// loop to get the attenuation
+	vec3f curP = P;
+	isect isecP;
+	vec3f ret = getColor(P);
+	ray r = ray(curP, d);
+	bool skip = false; //used to skip the second intersection upon the same geometry
+	while (scene->intersect(r, isecP)){
+		//if not transparent return black
+		if (isecP.getMaterial().kt.iszero())return vec3f(0, 0, 0);
+		//use current intersection point as new light source
+		curP = r.at(isecP.t);
+		r = ray(curP, d);
+		if (!skip) {
+			ret = prod(ret, isecP.getMaterial().kt);
+			skip = true;
+		}
+		else {
+			skip = false;
+		}
 	}
-	else
-	{
-		return vec3f(1.0, 1.0, 1.0);
-	}
+
+	return ret;
 }
 
 vec3f DirectionalLight::getColor( const vec3f& P ) const
