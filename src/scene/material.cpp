@@ -8,41 +8,34 @@
 // the color of that point.
 vec3f Material::shade( Scene *scene, const ray& r, const isect& i ) const
 {
-	// YOUR CODE HERE
+	// Initial light get set to ke
+	vec3f result = ke;
+	vec3f normal = i.N;
+	vec3f P = r.at(i.t);
+	vec3f out_P = P + i.N*RAY_EPSILON;
 
-	// For now, this method just returns the diffuse color of the object.
-	// This gives a single matte color for every distinct surface in the
-	// scene, and that's it.  Simple, but enough to get you started.
-	// (It's also inconsistent with the phong model...)
+	// Handle transparency by transmissive light
+	vec3f transparency = vec3f(1, 1, 1) - kt;
 
-	// Your mission is to fill in this method with the rest of the phong
-	// shading model, including the contributions of all the light sources.
-    // You will need to call both distanceAttenuation() and shadowAttenuation()
-    // somewhere in your code in order to compute shadows and light falloff.
+	// Handle ambient light effect
+	vec3f ambient = prod(ka, scene->getAmbient());
 
-
-	// Iteration 0
-	vec3f result = ke; // Firt set to emissive
+	result += prod(transparency, ambient);
 	
-	// Iteration 1
-	const vec3f point = r.at(i.t);
-	const vec3f ambient = scene->getAmbient();
-	result += prod(ka, ambient);
+	// iterate over ray
+	for (Scene::cliter j = scene->beginLights(); j != scene->endLights(); j++){
+		// shadow and distance attenuation, the color part is handled in light
+		// Note use out_P is important, to see the effect, select recur_depth and look at the red one
+		vec3f atten = (*j)->distanceAttenuation(P)*(*j)->shadowAttenuation(out_P);
 
-	// Iteration 2
-	for (Scene::cliter j = scene->beginLights(); j != scene->endLights(); ++j) 
-	{
-		vec3f light = (*j)->getColor(point);
+		vec3f light = ((*j)->getDirection(P)).normalize();
+		double angle = maximum(normal.dot(light), 0.0);
+		vec3f diffuse = prod(kd * angle, transparency);
 
-		double angle = max(i.N.dot((*j)->getDirection(point)), 0.0);
-		vec3f diffuse = kd * angle;
-
-		vec3f atten = (*j)->distanceAttenuation(point) * (*j)->shadowAttenuation(point);
-		vec3f R = (2 * (i.N.dot((*j)->getDirection(point))) * i.N) - (*j)->getDirection(point);
-		vec3f specular = ks*pow(max<double>(R*((*j)->getDirection(point)), 0.0), shininess*128.0);
-		result += prod(prod(atten, light), specular+diffuse);
+		vec3f R = ((2 * (normal.dot(light)) * normal) - light).normalize();
+		vec3f specular = ks*(pow(maximum(R*(-r.getDirection()), 0), shininess*128.0));
+		result += prod(atten, diffuse + specular);
 	}
 	result = result.clamp();
-	
 	return result;
 }
