@@ -114,6 +114,9 @@
     <ClCompile Include="src\SceneObjects\trimesh.cpp">
       <Filter>Source Files\SceneObjects</Filter>
     </ClCompile>
+    <ClCompile Include="src\SceneObjects\ParticleSys.cpp">
+      <Filter>Source Files\SceneObjects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\RayTracer.h">
@@ -168,6 +171,9 @@
       <Filter>Header Files\SceneObjects.</Filter>
     </ClInclude>
     <ClInclude Include="src\SceneObjects\trimesh.h">
+      <Filter>Header Files\SceneObjects.</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SceneObjects\ParticleSys.h">
       <Filter>Header Files\SceneObjects.</Filter>
     </ClInclude>
   </ItemGroup>
