@@ -8,7 +8,7 @@
 #include "../scene/material.h"
 #include "../scene/scene.h"
 
-class Particle
+struct Particle
 {
 public:
 	vec3f position;
@@ -19,12 +19,14 @@ public:
 class ParticleSource : public MaterialSceneObject
 {
 	friend class Particle;
-	typedef vector<Particle*> Particles;
+	typedef list<Particle*> Particles; //use list to remove particles more easily
 	Particles particles;
 
 	//parameters for the particle source
 	//System states
-	double angle; //360 degrees for a spherical explosion
+	//vec3f origin;
+	//vec3f orientation; // where the z axis is pointing at.
+	double angle; //360 degrees for a spherical explosion. Spherical symmetry with respect to z axis.
 	vec3f gravity; //gravitational acceleration for curved projectiles
 	double initialSpeed; //how fast the particles are projected
 	double frameTime; //time per frame
@@ -32,8 +34,6 @@ class ParticleSource : public MaterialSceneObject
 	int numParticles; //number of particles projected
 	double initialLife;
 	//Render parameters
-	//color?
-	//
 public:
 	ParticleSource(Scene *scene, Material *mat, TransformNode *transform)
 		: MaterialSceneObject(scene, mat) //DO WE NEED MAT HERE?
