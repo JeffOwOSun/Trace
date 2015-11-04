@@ -5,15 +5,15 @@
 void ParticleSource::render()
 {
 	double time = 0;
-	for (int frame = 0; frame < numFrame; ++frame) {
-		time = frame * frameTime;
-		std::default_random_engine generator1, generator2;
-		std::uniform_real_distribution<double> position_distribution(-1.0, 1.0);
-		std::uniform_real_distribution<double> velocity_distribution(-1.0, 1.0);
+	std::default_random_engine generator1, generator2;
+	std::uniform_real_distribution<double> position_distribution(-1.0, 1.0);
+	std::uniform_real_distribution<double> velocity_distribution(-1.0, 1.0);
+	for (int frame = 0; frame < m_numFrame; ++frame) {
+		time = frame * m_frameTime;
 		//initialize the particles
-		for (int i = 0; i < numParticles; ++i) {
+		for (int i = 0; i < m_numParticles; ++i) {
 			Particle *myParticle = new Particle;
-			myParticle->life = initialLife;
+			myParticle->life = m_initialLife;
 			vec3f position;
 			for (int i = 0; i < 3; ++i) {
 				position[i] = position_distribution(generator1);
@@ -23,14 +23,14 @@ void ParticleSource::render()
 			for (int i = 0; i < 3; ++i) {
 				velocity[i] = velocity_distribution(generator2);
 			}
-			myParticle->velocity = velocity.normalize() * initialSpeed;
+			myParticle->velocity = velocity.normalize() * m_initialSpeed;
 
 			particles.push_back(myParticle);
 		}
 		//calculate the particles
 		for (Particles::iterator iter = particles.begin(); iter != particles.end(); ++iter) {
 			Particle* particle = *iter;
-			particle->life -= frameTime;
+			particle->life -= m_frameTime;
 
 			//kill the ones that are dead
 			if (particle->life < 0) {
@@ -40,8 +40,8 @@ void ParticleSource::render()
 			}
 
 			//evolve
-			particle->position += particle->velocity * frameTime;
-			particle->velocity += gravity * frameTime;
+			particle->position += particle->velocity * m_frameTime;
+			particle->velocity += m_gravity * m_frameTime;
 		}
 	}
 
@@ -72,7 +72,7 @@ void ParticleSource::render()
 		Particle* particle = *iter;
 
 		//set the material according to life============================================
-		Material* myMat;
+		Material* myMat = new Material();
 		myMat->ke = vec3f(1.0, 0.0, 0.0); //pure red, for now
 
 		//the object====================================================================
@@ -100,12 +100,18 @@ void ParticleSource::render()
 		transform = transform-> createChild(mat4f(row1, row2, row3, row4).transpose());
 
 		//scale the cylinder to be as long as the velocity times frameTime
-		transform = transform->createChild(mat4f::scale(vec3f(0.1, 0.1, frameTime * particle->velocity.length())));
+		transform = transform->createChild(mat4f::scale(vec3f(0.01, 0.01, m_frameTime * particle->velocity.length())));
 
 		//move down z axis by 0.5
 		transform = transform->createChild(mat4f::translate(vec3f(0.0, 0.0, -0.5)));
 		
 		obj->setTransform(transform);
 		scene->add(obj);
+	}
+}
+
+ParticleSource::~ParticleSource() {
+	for (Particles::iterator iter = particles.begin(); iter != particles.end(); ++iter) {
+		delete *iter;
 	}
 }

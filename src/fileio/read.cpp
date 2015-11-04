@@ -19,6 +19,7 @@
 #include "../SceneObjects/Cylinder.h"
 #include "../SceneObjects/Sphere.h"
 #include "../SceneObjects/Square.h"
+#include "../SceneObjects/ParticleSys.h"
 #include "../scene/light.h"
 
 typedef map<string,Material*> mmap;
@@ -32,6 +33,7 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 	const mmap& materials, TransformNode *transform );
 static void processTrimesh( string name, Obj *child, Scene *scene,
                                      const mmap& materials, TransformNode *transform );
+static void processParticle(string name, Obj* child, Scene *scene, const mmap& materials, TransformNode *transform);
 static void processCamera( Obj *child, Scene *scene );
 static Material *getMaterial( Obj *child, const mmap& bindings );
 static Material *processMaterial( Obj *child, mmap *bindings = NULL );
@@ -291,16 +293,18 @@ static void processGeometry( string name, Obj *child, Scene *scene,
                                                              l4[1]->getScalar(),
                                                              l4[2]->getScalar(),
                                                              l4[3]->getScalar() ) ) ) );
-	} else if( name == "trimesh" || name == "polymesh" ) { // 'polymesh' is for backwards compatibility
-        processTrimesh( name, child, scene, materials, transform);
+	} else if (name == "trimesh" || name == "polymesh") { // 'polymesh' is for backwards compatibility
+		processTrimesh(name, child, scene, materials, transform);
+	} else if (name == "particles") { //SYS CUSTOM: particle system
+		processParticle(name, child, scene, materials, transform);
     } else {
 		SceneObject *obj = NULL;
        	Material *mat;
         
         //if( hasField( child, "material" ) )
-        mat = getMaterial(getField( child, "material" ), materials );
-        //else
-        //    mat = new Material();
+		mat = getMaterial(getField( child, "material" ), materials );
+		//else
+			//mat = new Material();
 
 		if( name == "sphere" ) {
 			obj = new Sphere( scene, mat );
@@ -390,6 +394,57 @@ static void processTrimesh( string name, Obj *child, Scene *scene,
         throw ParseError( error );
 
     scene->add(tmesh);
+}
+
+static void processParticle(string name, Obj* child, Scene *scene, const mmap& materials, TransformNode *transform) {
+	Material *mat;
+
+	if (hasField(child, "material"))
+		mat = getMaterial(getField(child, "material"), materials);
+	else
+		mat = new Material();
+
+	ParticleSource* particleSrc = new ParticleSource(scene, mat, transform);
+
+	//TODO: SET THE PARAMETERS
+	//set the angle
+	double angle;
+	if (maybeExtractField(child, "angle", angle)) {
+		particleSrc->setAngle(angle);
+	}
+	
+	//set the gravity
+	const mytuple &gravityTuple = getField(child, "gravity")->getTuple();
+	verifyTuple(gravityTuple, 3);
+	particleSrc->setGravity(gravityTuple[0]->getScalar(), gravityTuple[1]->getScalar(), gravityTuple[2]->getScalar());
+
+	//set the initialSpeed
+	double initialSpeed;
+	if (maybeExtractField(child, "initialSpeed", initialSpeed)) {
+		particleSrc->setInitialSpeed(initialSpeed);
+	}
+	//set the frameTime
+	double frameTime;
+	if (maybeExtractField(child, "frameTime", frameTime)) {
+		particleSrc->setFrameTime(frameTime);
+	}
+	//set the number of frames
+	double numFrame;
+	if (maybeExtractField(child, "numFrame", numFrame)) {
+		particleSrc->setNumFrame((int)numFrame);
+	}
+	//set the number of particles
+	double numParticles;
+	if (maybeExtractField(child, "numParticles", numParticles)) {
+		particleSrc->setNumParticles((int)numParticles);
+	}
+	//set the initial life
+	double initialLife;
+	if (maybeExtractField(child, "initialLife", initialLife)) {
+		particleSrc->setInitialLife(initialLife);
+	}
+	particleSrc->render();
+	scene->add(particleSrc);
 }
 
 static Material *getMaterial( Obj *child, const mmap& bindings )
@@ -569,7 +624,8 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 				name == "scale" ||
 				name == "transform" ||
                 name == "trimesh" ||
-                name == "polymesh") 
+                name == "polymesh" ||
+				name == "particles") 
 	{ // polymesh is for backwards compatibility.
 		processGeometry( name, child, scene, materials, &scene->transformRoot);
 		//scene->add( geo );
