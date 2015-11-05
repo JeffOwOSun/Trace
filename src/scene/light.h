@@ -12,6 +12,7 @@ public:
 	virtual double distanceAttenuation( const vec3f& P ) const = 0;
 	virtual vec3f getColor( const vec3f& P ) const = 0;
 	virtual vec3f getDirection( const vec3f& P ) const = 0;
+	virtual double getCumulativeIndex() const { return 1.0; } //return the refractive index of this light source's environment
 
 protected:
 	Light( Scene *scene, const vec3f& col )
@@ -30,6 +31,7 @@ public:
 	virtual double distanceAttenuation( const vec3f& P ) const;
 	virtual vec3f getColor( const vec3f& P ) const;
 	virtual vec3f getDirection( const vec3f& P ) const;
+	//TODO: add getPhoton for directional light
 
 protected:
 	vec3f 		orientation;
@@ -46,12 +48,14 @@ public:
 	virtual vec3f getDirection( const vec3f& P ) const;
 	void setDistanceAttenuation(const double constant, const double linear, const double quadratic);
 	virtual ray getPhoton(std::default_random_engine &generator) const;
+	virtual double getCumulativeIndex();
 protected:
 	vec3f position;
 	double m_const_atten_coeff, m_linear_atten_coeff, m_quadratic_atten_coeff;
 private:
 	std::uniform_real_distribution<double> m_photon_dir_dist1;
 	std::uniform_real_distribution<double> m_photon_dir_dist2;
+	double m_refractive_index
 };
 
 class AmbientLight
