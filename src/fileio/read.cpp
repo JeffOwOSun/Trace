@@ -21,6 +21,7 @@
 #include "../SceneObjects/Square.h"
 #include "../SceneObjects/ParticleSys.h"
 #include "../scene/light.h"
+#include "../SceneObjects/CSG.h"
 
 typedef map<string,Material*> mmap;
 
@@ -31,6 +32,7 @@ static bool hasField( Obj *obj, const string& name );
 static vec3f tupleToVec( Obj *obj );
 static void processGeometry( string name, Obj *child, Scene *scene,
 	const mmap& materials, TransformNode *transform );
+static void processCSGGeometry(string name, Scene *scene, const mmap& materials, TransformNode* tranform);
 static void processTrimesh( string name, Obj *child, Scene *scene,
                                      const mmap& materials, TransformNode *transform );
 static void processParticle(string name, Obj* child, Scene *scene, const mmap& materials, TransformNode *transform);
@@ -329,6 +331,34 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 			obj = new Cone( scene, mat, height, bottom_radius, top_radius, capped );
 		} else if( name == "square" ) {
 			obj = new Square( scene, mat );
+		}
+		else if (name == "CSG")
+		{
+			// For CSG file definition, the order is obj -> relation -> obj 
+			const mytuple& tup = child->getTuple();
+			verifyTuple(tup, 3);
+			CSGTree* ia = new CSGTree();
+			CSGTree* ib = new CSGTree();
+			ia = processCSGGeometry(tup[0], scene, materials, transform);
+			ib = processCSGGeometry(tup[0], scene, materials, transform);
+			string str = tup[1]->getString();
+			CSG_RELATION tmp_re;
+			if (str == "AND")
+			{
+				tmp_re = CSG_AND;
+			}
+			else if (str == "OR")
+			{
+				tmp_re = CSG_OR;
+			}
+			else if (str == "MINUS")
+			{
+				tmp_re = CSG_MINUS;
+			}
+			else throw ParseError(string("invalid CSG relation"));
+			ia = ia->merge(ib, tmp_re);
+			scene->addCSGNode(ia->getRoot());
+			obj = new CSG(scene, mat, ia);
 		}
 
         obj->setTransform(transform);
@@ -629,7 +659,8 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 				name == "transform" ||
                 name == "trimesh" ||
                 name == "polymesh" ||
-				name == "particles") 
+				name == "particles" ||
+				name == "CSG") 
 	{ // polymesh is for backwards compatibility.
 		processGeometry( name, child, scene, materials, &scene->transformRoot);
 		//scene->add( geo );
@@ -644,5 +675,187 @@ static void processObject( Obj *obj, Scene *scene, mmap& materials )
 	} else 
 	{
 		throw ParseError( string( "Unrecognized object: " ) + name );
+	}
+}
+
+static CSGTree* processCSGGeometry(Obj* obj, Scene *scene, const mmap& materials, TransformNode* tranform)
+{
+	string name;
+	Obj* child;
+	if (obj->getTypeName() == "id")
+	{
+		name = obj->getID();
+		child = NULL;
+	}
+	else if (obj->getTypeName() == "named")
+	{
+		name = obj->getName();
+		child = obj->getChild();
+	}
+	else
+	{
+		ostrstream oss;
+		oss << "Unknow input object";
+		obj->printOn(oss);
+		throw ParseError(string(oss.str()));
+	}
+
+	return processCSGGeometry(name, child, scene, materials, tranform);
+}
+
+static CSGTree* processCSGGeometry(string name, Obj* child, Scene* scene, const mmap& materials, TransformNode* transform)
+{
+	if (name == "translate")
+	{
+		const mytuple& tup = child->getTuple();
+		verifyTuple(tup, 4);
+		processCSGGeometry(tup[3], scene, materials, 
+			transform->createChild(mat4f::rotate(vec3f(tup[0]->getScalar(),
+												   	   tup[1]->getScalar(),
+													   tup[2]->getScalar()),
+													   tup[3]->getScalar())));
+	}
+	else if (name == "rotate")
+	{
+		const mytuple& tup = child->getTuple();
+		verifyTuple(tup, 5);
+		processCSGGeometry(tup[4], scene, materials,
+			transform->createChild(mat4f::rotate(vec3f(tup[0]->getScalar(),
+													   tup[1]->getScalar(),
+													   tup[2]->getScalar()),
+													   tup[3]->getScalar())));
+	}
+	else if (name == "scale")
+	{
+		const mytuple& tup = child->getTuple();
+		if (tup.size() == 2) {
+			double sc = tup[0]->getScalar();
+			processCSGGeometry(tup[1],
+				scene,
+				materials,
+				transform->createChild(mat4f::scale(vec3f(sc, sc, sc))));
+		}
+		else {
+			verifyTuple(tup, 4);
+			processCSGGeometry(tup[3],
+				scene,
+				materials,
+				transform->createChild(mat4f::scale(vec3f(tup[0]->getScalar(),
+				tup[1]->getScalar(),
+				tup[2]->getScalar()))));
+		}
+	}
+	else if (name == "transform") {
+		const mytuple& tup = child->getTuple();
+		verifyTuple(tup, 5);
+
+		const mytuple& l1 = tup[0]->getTuple();
+		const mytuple& l2 = tup[1]->getTuple();
+		const mytuple& l3 = tup[2]->getTuple();
+		const mytuple& l4 = tup[3]->getTuple();
+		verifyTuple(l1, 4);
+		verifyTuple(l2, 4);
+		verifyTuple(l3, 4);
+		verifyTuple(l4, 4);
+
+		processCSGGeometry(tup[4],
+			scene,
+			materials,
+			transform->createChild(mat4f(vec4f(l1[0]->getScalar(),
+			l1[1]->getScalar(),
+			l1[2]->getScalar(),
+			l1[3]->getScalar()),
+			vec4f(l2[0]->getScalar(),
+			l2[1]->getScalar(),
+			l2[2]->getScalar(),
+			l2[3]->getScalar()),
+			vec4f(l3[0]->getScalar(),
+			l3[1]->getScalar(),
+			l3[2]->getScalar(),
+			l3[3]->getScalar()),
+			vec4f(l4[0]->getScalar(),
+			l4[1]->getScalar(),
+			l4[2]->getScalar(),
+			l4[3]->getScalar()))));
+	}
+	else if (name == "trimesh" || name == "polymesh") { // 'polymesh' is for backwards compatibility
+		processTrimesh(name, child, scene, materials, transform);
+	}
+	else if (name == "particles") { //SYS CUSTOM: particle system
+		processParticle(name, child, scene, materials, transform);
+	}
+	else {
+		SceneObject *obj = NULL;
+		Material *mat;
+
+		//if( hasField( child, "material" ) )
+		mat = getMaterial(getField(child, "material"), materials);
+		//else
+		//mat = new Material();
+
+		if (name == "sphere") {
+			obj = new Sphere(scene, mat);
+		}
+		else if (name == "box") {
+			obj = new Box(scene, mat);
+		}
+		else if (name == "cylinder") {
+			// Similar as cone, cylinder can also be capped
+			bool capped = true;
+			maybeExtractField(child, "capped", capped);
+			obj = new Cylinder(scene, mat, capped);
+		}
+		else if (name == "cone") {
+			double height = 1.0;
+			double bottom_radius = 1.0;
+			double top_radius = 0.0;
+			bool capped = true;
+
+			maybeExtractField(child, "height", height);
+			maybeExtractField(child, "bottom_radius", bottom_radius);
+			maybeExtractField(child, "top_radius", top_radius);
+			maybeExtractField(child, "capped", capped);
+
+			obj = new Cone(scene, mat, height, bottom_radius, top_radius, capped);
+		}
+		else if (name == "square") {
+			obj = new Square(scene, mat);
+		}
+		else if (name == "CSG")
+		{
+			// For CSG file definition, the order is obj -> relation -> obj 
+			const mytuple& tup = child->getTuple();
+			verifyTuple(tup, 3);
+			CSGTree* ia = new CSGTree();
+			CSGTree* ib = new CSGTree();
+			ia = processCSGGeometry(tup[0], scene, materials, transform);
+			ib = processCSGGeometry(tup[0], scene, materials, transform);
+			string str = tup[1]->getString();
+			CSG_RELATION tmp_re;
+			if (str == "AND")
+			{
+				tmp_re = CSG_AND;
+			}
+			else if (str == "OR")
+			{
+				tmp_re = CSG_OR;
+			}
+			else if (str == "MINUS")
+			{
+				tmp_re = CSG_MINUS;
+			}
+			else throw ParseError(string("invalid CSG relation"));
+			ia = ia->merge(ib, tmp_re);
+			return ia;
+		}
+
+		obj->setTransform(transform);
+		CSGNode *node = new CSGNode;
+		node->setIsLeaf(true);
+		node->setObject(obj);
+		CSGTree* result = new CSGTree(node);
+		scene->addCSGObject(obj);
+		scene->addCSGNode(node);
+		return result;
 	}
 }

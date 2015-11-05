@@ -135,6 +135,14 @@ Scene::~Scene()
 	for( l = lights.begin(); l != lights.end(); ++l ) {
 		delete (*l);
 	}
+
+	for (list<CSGNode*>::iterator k = CSGNodeArray.begin(); k != CSGNodeArray.end(); ++k) {
+		delete (*g);
+	}
+
+	for (g = CSGObjectArray.begin(); g != CSGObjectArray.end(); ++g) {
+		delete (*g);
+	}
 }
 
 // Get any intersection with an object.  Return information about the 

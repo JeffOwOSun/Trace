@@ -16,10 +16,12 @@ using namespace std;
 #include "material.h"
 #include "camera.h"
 #include "../vecmath/vecmath.h"
+#include <vector>
+#include "../SceneObjects/CSG.h"
 
 class Light;
 class Scene;
-
+extern class CSGNode;
 class SceneElement
 {
 public:
@@ -285,12 +287,18 @@ public:
 		obj->setOrder(++currentOrder);
 	}
 
+	void addCSGObject(Geometry* obj) {
+		CSGObjectArray.push_back(obj);
+	}
+	void addCSGNode(CSGNode* node) {
+		CSGNodeArray.push_back(node);
+	}
+
 	list<Light*>::const_iterator beginLights() const { return lights.begin(); }
 	list<Light*>::const_iterator endLights() const { return lights.end(); }
         
 	Camera *getCamera() { return &camera; }
 
-	
 
 private:
 	int currentOrder;
@@ -304,6 +312,8 @@ private:
 	// must fall within this bounding box.  Objects that don't have hasBoundingBoxCapability()
 	// are exempt from this requirement.
 	BoundingBox sceneBounds;
+	list<CSGNode*> CSGNodeArray;
+	list<Geometry*> CSGObjectArray;
 };
 
 #endif // __SCENE_H__
