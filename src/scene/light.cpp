@@ -46,7 +46,9 @@ PointLight::PointLight(Scene *scene, const vec3f& pos, const vec3f& color)
 	position(pos),
 	m_const_atten_coeff(0.0),
 	m_linear_atten_coeff(0.0),
-	m_quadratic_atten_coeff(0.0)
+	m_quadratic_atten_coeff(0.0),
+	m_photon_dir_dist1(-1.0, 1.0),
+	m_photon_dir_dist2(-1.0, 1.0)
 {}
 
 double PointLight::distanceAttenuation( const vec3f& P ) const
@@ -102,6 +104,20 @@ void PointLight::setDistanceAttenuation(const double constant,
 	m_const_atten_coeff = constant;
 	m_linear_atten_coeff = linear;
 	m_quadratic_atten_coeff = quadratic;
+}
+
+ray PointLight::getPhoton(std::default_random_engine &generator) const
+{
+	double x1, x2, x0;
+	do {
+		x1 = m_photon_dir_dist1(generator);
+		x2 = m_photon_dir_dist2(generator);
+	} while ((x0 = x1 * x1 + x2 * x2) >= 1);
+	float x = 2 * x1 * sqrt(1 - x0);
+	float y = 2 * x2 * sqrt(1 - x0);
+	float z = 1 - 2 * x0;
+	vec3f dir(x, y, z); //this random direction is uniformly distributed on the unit sphere;
+	return ray(position, dir);
 }
 
 double AmbientLight::distanceAttenuation(const vec3f& P) const

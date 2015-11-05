@@ -2,6 +2,7 @@
 #define __LIGHT_H__
 
 #include "scene.h"
+#include <random>
 
 class Light
 	: public SceneElement
@@ -44,10 +45,13 @@ public:
 	virtual vec3f getColor( const vec3f& P ) const;
 	virtual vec3f getDirection( const vec3f& P ) const;
 	void setDistanceAttenuation(const double constant, const double linear, const double quadratic);
-
+	virtual ray getPhoton(std::default_random_engine &generator) const;
 protected:
 	vec3f position;
 	double m_const_atten_coeff, m_linear_atten_coeff, m_quadratic_atten_coeff;
+private:
+	std::uniform_real_distribution<double> m_photon_dir_dist1;
+	std::uniform_real_distribution<double> m_photon_dir_dist2;
 };
 
 class AmbientLight
