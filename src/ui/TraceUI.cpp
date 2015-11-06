@@ -92,6 +92,12 @@ void TraceUI::cb_depthSlides(Fl_Widget* o, void* v)
 	((TraceUI*)(o->user_data()))->m_nDepth=int( ((Fl_Slider *)o)->value() ) ;
 }
 
+void TraceUI::cb_causticToggle(Fl_Widget* o, void* v)
+{
+	TraceUI* pUI = (TraceUI*)(o->user_data());
+	pUI->m_bCaustic = bool(((Fl_Light_Button*)o)->value());
+}
+
 void TraceUI::cb_render(Fl_Widget* o, void* v)
 {
 	char buffer[256];
@@ -105,10 +111,12 @@ void TraceUI::cb_render(Fl_Widget* o, void* v)
 
 		pUI->m_traceGlWindow->show();
 
-		pUI->raytracer->traceSetup(width, height);
+		pUI->raytracer->traceSetup(width, height, pUI->m_bCaustic);
 		
 		// Save the window label
 		const char *old_label = pUI->m_traceGlWindow->label();
+
+		// render the photon map
 
 		// start to render here	
 		done=false;
@@ -214,7 +222,8 @@ TraceUI::TraceUI() {
 	// init.
 	m_nDepth = 0;
 	m_nSize = 150;
-	m_mainWindow = new Fl_Window(100, 40, 320, 100, "Ray <Not Loaded>");
+	m_bCaustic = false;
+	m_mainWindow = new Fl_Window(100, 40, 320, 130, "Ray <Not Loaded>");
 		m_mainWindow->user_data((void*)(this));	// record self to be used by static callback functions
 		// install menu bar
 		m_menubar = new Fl_Menu_Bar(0, 0, 320, 25);
@@ -245,6 +254,11 @@ TraceUI::TraceUI() {
 		m_sizeSlider->value(m_nSize);
 		m_sizeSlider->align(FL_ALIGN_RIGHT);
 		m_sizeSlider->callback(cb_sizeSlides);
+
+		// install slider size
+		m_causticButton = new Fl_Light_Button(10, 80, 90, 20, "Caustic");
+		m_causticButton->user_data((void*)(this));	// record self to be used by static callback functions
+		m_causticButton->callback(cb_causticToggle);
 
 		m_renderButton = new Fl_Button(240, 27, 70, 25, "&Render");
 		m_renderButton->user_data((void*)(this));

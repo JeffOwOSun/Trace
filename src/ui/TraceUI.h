@@ -28,6 +28,7 @@ public:
 
 	Fl_Slider*			m_sizeSlider;
 	Fl_Slider*			m_depthSlider;
+	Fl_Light_Button*	m_causticButton;
 
 	Fl_Button*			m_renderButton;
 	Fl_Button*			m_stopButton;
@@ -47,6 +48,7 @@ private:
 
 	int			m_nSize;
 	int			m_nDepth;
+	bool		m_bCaustic;
 
 // static class members
 	static Fl_Menu_Item menuitems[];
@@ -62,6 +64,7 @@ private:
 
 	static void cb_sizeSlides(Fl_Widget* o, void* v);
 	static void cb_depthSlides(Fl_Widget* o, void* v);
+	static void cb_causticToggle(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);

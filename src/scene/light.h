@@ -55,7 +55,7 @@ protected:
 private:
 	std::uniform_real_distribution<double> m_photon_dir_dist1;
 	std::uniform_real_distribution<double> m_photon_dir_dist2;
-	double m_refractive_index
+	double m_refractive_index;
 };
 
 class AmbientLight

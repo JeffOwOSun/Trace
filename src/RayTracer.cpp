@@ -213,7 +213,7 @@ bool RayTracer::loadScene( char* fn )
 	return true;
 }
 
-void RayTracer::traceSetup( int w, int h )
+void RayTracer::traceSetup( int w, int h, bool caustic )
 {
 	if( buffer_width != w || buffer_height != h )
 	{
@@ -225,6 +225,12 @@ void RayTracer::traceSetup( int w, int h )
 		buffer = new unsigned char[ bufferSize ];
 	}
 	memset( buffer, 0, w*h*3 );
+
+	m_bCaustic = caustic;
+	if (caustic) {
+		//initialize the photon map
+		m_photon_map.initialize(scene, 10000);
+	}
 }
 
 void RayTracer::traceLines( int start, int stop )
