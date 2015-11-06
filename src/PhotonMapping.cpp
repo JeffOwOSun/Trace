@@ -64,7 +64,7 @@ void PhotonMap::generatePhotons(PointCloud<T> &point, PointCloud<T> &caustic, co
 					//continue the tracing with new ray
 					//consider the refraction
 					if (i.obj->hasInterior()) {
-						double cos_i = r.getDirection().dot(i.N);
+						double cos_i = max(min(r.getDirection().dot(i.N), 1.0), -1.0);
 						double relative_index;
 						if (cos_i > RAY_EPSILON) { //the ray is going out
 							relative_index = i.getMaterial().index;

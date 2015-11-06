@@ -119,7 +119,7 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 				}
 
 				double indexRatio = indexA / indexB;
-				double cos_i = normal*((-r.getDirection()).normalize());
+				double cos_i = max(min(normal*((-r.getDirection()).normalize()), 1.0), -1.0); //SYSNOTE: min(x, 1.0) to prevent cos_i becomes bigger than 1
 				double sin_i = sqrt(1 - cos_i*cos_i);
 				double sin_t = sin_i * indexRatio;
 
