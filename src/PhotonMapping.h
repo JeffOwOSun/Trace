@@ -85,11 +85,10 @@ class PhotonMap {
 	};
 
 	template<typename T>
-	void generatePhotons(PointCloud<T> &cloud, PointCloud<T> &caustic, const Scene* scene, const size_t N);
+	void generatePhotons(PointCloud<T> &cloud, const Scene* scene, const size_t N);
 	
 	Scene* m_scene;
 	PointCloud<double> m_cloud;
-	PointCloud<double> m_caustic;
 	size_t m_nN;
 	
 	// construct a kd-tree index:
@@ -100,13 +99,11 @@ class PhotonMap {
 	> my_kd_tree_t;
 
 	my_kd_tree_t* m_index;
-	my_kd_tree_t* m_caustic_index;
 
 public:
 	PhotonMap();
 	void initialize(Scene* scene, const size_t N);
 	vec3f shade(const vec3f& point);
-	vec3f shadeCaustic(const vec3f& point);
 };
 
 #endif //PHOTON_MAPPING_H

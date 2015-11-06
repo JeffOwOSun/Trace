@@ -37,8 +37,8 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 
 		if (m_bCaustic) {
 			//photon mapping mode
-			shade += m_photon_map.shadeCaustic(r.at(i.t));
-			//return m_photon_map.shade(r.at(i.t));
+			//shade += m_photon_map.shadeCaustic(r.at(i.t));
+			shade += m_photon_map.shade(r.at(i.t));
 		}
 		
 		const Material& m = i.getMaterial();
@@ -235,7 +235,7 @@ void RayTracer::traceSetup( int w, int h, bool caustic )
 	m_bCaustic = caustic;
 	if (caustic) {
 		//initialize the photon map
-		m_photon_map.initialize(scene, 10000000);
+		m_photon_map.initialize(scene, 1000000);
 	}
 }
 
