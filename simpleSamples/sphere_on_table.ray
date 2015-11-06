@@ -20,7 +20,8 @@ point_light {
 scale(1.5, 1.5, 1.5, sphere {
 	material = {
 		diffuse = (0, 0, 0);
-		transmissive = (0.7, 0.7, 0.7);
+		transmissive = (0.9, 0.9, 0.9);
+		reflective = (0.1, 0.1, 0.1);
 		index = 1.5;
 	}
 } )
@@ -30,6 +31,6 @@ translate(0, 0, -1.5,
 		box {
 			material = {
 				diffuse = (0.2, 0.8, 0.8);
-				specular = (0.7, 0.7, 0.7);
+				specular = (0.2, 0.2, 0.2);
 			}
 		}))

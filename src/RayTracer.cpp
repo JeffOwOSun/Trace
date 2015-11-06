@@ -33,32 +33,39 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 	isect i;
 
 	if( scene->intersect( r, i ) ) {
+		vec3f shade;
 
+		if (m_bCaustic) {
+			//photon mapping mode
+			shade += m_photon_map.shadeCaustic(r.at(i.t));
+			//return m_photon_map.shade(r.at(i.t));
+		}
+		
 		const Material& m = i.getMaterial();
-		vec3f shade = m.shade(scene, r, i);
-		if (depth >= traceUI->getDepth()) 
+		shade += m.shade(scene, r, i);
+		if (depth >= traceUI->getDepth())
 			return shade;
 
-		vec3f conPoint = r.at(i.t); 
+		vec3f conPoint = r.at(i.t);
 		vec3f normal;
 		vec3f Rdir = 2 * (i.N*-r.getDirection()) * i.N - (-r.getDirection());
 		ray R = ray(conPoint, Rdir);
-		
+
 		// Reflection part
-		if (!i.getMaterial().kr.iszero()) 
+		if (!i.getMaterial().kr.iszero())
 		{
 			shade += prod(i.getMaterial().kr, traceRay(scene, R, thresh, depth + 1));
 		}
-	
+
 		// Refraction part
 		// We maintain a map, this map has order so it can be simulated as a extended stack		  
 		if (!i.getMaterial().kt.iszero())
 		{
 			// take account total refraction effect
-			bool TotalRefraction = false; 
+			bool TotalRefraction = false;
 			// opposite ray
 			ray oppR(conPoint, r.getDirection()); //without refraction
-			
+
 			// marker to simulate a stack
 			bool toAdd = false, toErase = false;
 
@@ -88,14 +95,14 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 					{
 						indexB = 1.0;
 					}
-					else 
+					else
 					{
 						indexB = mediaHistory.rbegin()->second.index;
 					}
 					normal = -i.N;
 				}
 				// For ray get in the object
-				else 
+				else
 				{
 					if (mediaHistory.empty())
 					{
@@ -114,13 +121,13 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 				double indexRatio = indexA / indexB;
 				double cos_i = normal*((-r.getDirection()).normalize());
 				double sin_i = sqrt(1 - cos_i*cos_i);
-				double sin_t = sin_i * indexRatio; 
+				double sin_t = sin_i * indexRatio;
 
 				if (sin_t > 1.0 + RAY_EPSILON)
 				{
 					TotalRefraction = true;
 				}
-				else 
+				else
 				{
 					TotalRefraction = false;
 					double cos_t = sqrt(1 - sin_t*sin_t);
@@ -129,8 +136,8 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 					shade += prod(i.getMaterial().kt, traceRay(scene, oppR, thresh, depth + 1));
 				}
 			}
-			
-			if (toAdd) 
+
+			if (toAdd)
 			{
 				mediaHistory.insert(make_pair(i.obj->getOrder(), i.getMaterial()));
 			}
@@ -141,7 +148,6 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 		}
 		shade = shade.clamp();
 		return shade;
-
 	}
 	else {
 		return vec3f(0.0, 0.0, 0.0);
@@ -229,7 +235,7 @@ void RayTracer::traceSetup( int w, int h, bool caustic )
 	m_bCaustic = caustic;
 	if (caustic) {
 		//initialize the photon map
-		m_photon_map.initialize(scene, 10000);
+		m_photon_map.initialize(scene, 1000000);
 	}
 }
 
