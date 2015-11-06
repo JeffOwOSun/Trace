@@ -123,7 +123,7 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 				double sin_i = sqrt(1 - cos_i*cos_i);
 				double sin_t = sin_i * indexRatio;
 
-				if (sin_t > 1.0 + RAY_EPSILON)
+				if (sin_t > 1.0)
 				{
 					TotalRefraction = true;
 				}
@@ -235,7 +235,7 @@ void RayTracer::traceSetup( int w, int h, bool caustic )
 	m_bCaustic = caustic;
 	if (caustic) {
 		//initialize the photon map
-		m_photon_map.initialize(scene, 1000000);
+		m_photon_map.initialize(scene, 10000000);
 	}
 }
 
