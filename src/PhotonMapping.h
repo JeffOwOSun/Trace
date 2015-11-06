@@ -40,6 +40,10 @@ inline double max3(vec3f v) {
 	return max3<double>(v[0], v[1], v[2]);
 }
 
+inline double cone_filter(double r, double a = -1000.0, double b = 1.0) {
+	return (a * r + b < 0) ? 0.0 : a * r + b;
+}
+
 class PhotonMap {
 	//collection of photons
 	template <typename T>

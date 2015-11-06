@@ -200,33 +200,19 @@ vec3f PhotonMap::shade(const vec3f& point) {
 //find the color of the given point
 vec3f PhotonMap::shadeCaustic(const vec3f& point) {
 	//find the nearest n points
-	const size_t num_results = 50; //N = 10
-	//const double max_radius = 0.0001;
+	const size_t num_results = 30; //N = 10
 	const double atten_coeff = 1.0; //3.0
 	std::vector<size_t>   ret_index(num_results);
 	std::vector<double> out_dist_sqr(num_results);
-	//std::vector<std::pair<size_t, double> >   ret_matches;
-	//nanoflann::SearchParams params;
-	//m_caustic_index->radiusSearch(point.n, max_radius, ret_matches, params);
-	//if (ret_matches.size() > num_results) {
-		m_caustic_index->knnSearch(point.n, num_results, &ret_index[0], &out_dist_sqr[0]);
-			//find the sphere that covers them
-			double radius = out_dist_sqr.back();
-			//calculate the intensity
-			vec3f ret;
-			for (int i = 0; i < ret_index.size(); ++i) {
-				ret += m_caustic.pts[ret_index[i]].energy;
-			}
-		#define PI 3.14159265358979
-			return ret / (PI * radius * radius) / atten_coeff;
-	//}
-	//else {
-	//	vec3f ret;
-	//	for (int i = 0; i < ret_matches.size(); ++i) {
-//			ret += m_caustic.pts[ret_matches[i].first].energy;
-	//	}
-//#define PI 3.14159265358979
-	//	return ret / (PI * max_radius * max_radius) / atten_coeff;
-	//}
+	m_caustic_index->knnSearch(point.n, num_results, &ret_index[0], &out_dist_sqr[0]);
+	//find the sphere that covers them
+	double radius = out_dist_sqr.back();
+	//calculate the intensity
+	vec3f ret;
+	for (int i = 0; i < ret_index.size(); ++i) {
+		ret += m_caustic.pts[ret_index[i]].energy * cone_filter(out_dist_sqr[i], -1000);
+	}
+#define PI 3.14159265358979
+	return ret / (PI * radius * radius) / atten_coeff;
 	
 }
