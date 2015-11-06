@@ -32,7 +32,8 @@ static bool hasField( Obj *obj, const string& name );
 static vec3f tupleToVec( Obj *obj );
 static void processGeometry( string name, Obj *child, Scene *scene,
 	const mmap& materials, TransformNode *transform );
-static void processCSGGeometry(string name, Scene *scene, const mmap& materials, TransformNode* tranform);
+static CSGTree* processCSGGeometry(Obj* obj, Scene *scene, const mmap& materials, TransformNode* tranform);
+static CSGTree* processCSGGeometry(string name, Obj* child, Scene* scene, const mmap& materials, TransformNode* transform);
 static void processTrimesh( string name, Obj *child, Scene *scene,
                                      const mmap& materials, TransformNode *transform );
 static void processParticle(string name, Obj* child, Scene *scene, const mmap& materials, TransformNode *transform);
@@ -303,10 +304,9 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 		SceneObject *obj = NULL;
        	Material *mat;
         
-        //if( hasField( child, "material" ) )
-		mat = getMaterial(getField( child, "material" ), materials );
+        mat = getMaterial(getField( child, "material" ), materials );
 		//else
-			//mat = new Material();
+		//	mat = new Material();*/
 
 		if( name == "sphere" ) {
 			obj = new Sphere( scene, mat );
@@ -334,13 +334,13 @@ static void processGeometry( string name, Obj *child, Scene *scene,
 		}
 		else if (name == "CSG")
 		{
-			// For CSG file definition, the order is obj -> relation -> obj 
-			const mytuple& tup = child->getTuple();
+			const mytuple& tup = getField(child, "struct")->getTuple();
+			// For CSG file definition, the order is obj -> relation -> obj
 			verifyTuple(tup, 3);
 			CSGTree* ia = new CSGTree();
 			CSGTree* ib = new CSGTree();
 			ia = processCSGGeometry(tup[0], scene, materials, transform);
-			ib = processCSGGeometry(tup[0], scene, materials, transform);
+			ib = processCSGGeometry(tup[2], scene, materials, transform);
 			string str = tup[1]->getString();
 			CSG_RELATION tmp_re;
 			if (str == "AND")
@@ -709,7 +709,7 @@ static CSGTree* processCSGGeometry(string name, Obj* child, Scene* scene, const 
 	{
 		const mytuple& tup = child->getTuple();
 		verifyTuple(tup, 4);
-		processCSGGeometry(tup[3], scene, materials, 
+		return processCSGGeometry(tup[3], scene, materials, 
 			transform->createChild(mat4f::rotate(vec3f(tup[0]->getScalar(),
 												   	   tup[1]->getScalar(),
 													   tup[2]->getScalar()),
@@ -719,7 +719,7 @@ static CSGTree* processCSGGeometry(string name, Obj* child, Scene* scene, const 
 	{
 		const mytuple& tup = child->getTuple();
 		verifyTuple(tup, 5);
-		processCSGGeometry(tup[4], scene, materials,
+		return processCSGGeometry(tup[4], scene, materials,
 			transform->createChild(mat4f::rotate(vec3f(tup[0]->getScalar(),
 													   tup[1]->getScalar(),
 													   tup[2]->getScalar()),
@@ -730,14 +730,14 @@ static CSGTree* processCSGGeometry(string name, Obj* child, Scene* scene, const 
 		const mytuple& tup = child->getTuple();
 		if (tup.size() == 2) {
 			double sc = tup[0]->getScalar();
-			processCSGGeometry(tup[1],
+			return processCSGGeometry(tup[1],
 				scene,
 				materials,
 				transform->createChild(mat4f::scale(vec3f(sc, sc, sc))));
 		}
 		else {
 			verifyTuple(tup, 4);
-			processCSGGeometry(tup[3],
+			return processCSGGeometry(tup[3],
 				scene,
 				materials,
 				transform->createChild(mat4f::scale(vec3f(tup[0]->getScalar(),
@@ -789,9 +789,9 @@ static CSGTree* processCSGGeometry(string name, Obj* child, Scene* scene, const 
 		Material *mat;
 
 		//if( hasField( child, "material" ) )
-		mat = getMaterial(getField(child, "material"), materials);
+		//mat = getMaterial(getField(child, "material"), materials);
 		//else
-		//mat = new Material();
+		mat = new Material();
 
 		if (name == "sphere") {
 			obj = new Sphere(scene, mat);
@@ -829,7 +829,7 @@ static CSGTree* processCSGGeometry(string name, Obj* child, Scene* scene, const 
 			CSGTree* ia = new CSGTree();
 			CSGTree* ib = new CSGTree();
 			ia = processCSGGeometry(tup[0], scene, materials, transform);
-			ib = processCSGGeometry(tup[0], scene, materials, transform);
+			ib = processCSGGeometry(tup[2], scene, materials, transform);
 			string str = tup[1]->getString();
 			CSG_RELATION tmp_re;
 			if (str == "AND")
@@ -848,14 +848,19 @@ static CSGTree* processCSGGeometry(string name, Obj* child, Scene* scene, const 
 			ia = ia->merge(ib, tmp_re);
 			return ia;
 		}
+		else {
+			throw ParseError(string("invalid primitive for CSG"));
+		}
 
 		obj->setTransform(transform);
+		obj->ComputeBoundingBox();
 		CSGNode *node = new CSGNode;
 		node->setIsLeaf(true);
 		node->setObject(obj);
 		CSGTree* result = new CSGTree(node);
 		scene->addCSGObject(obj);
 		scene->addCSGNode(node);
+		node->computeBoundingBox();
 		return result;
 	}
 }

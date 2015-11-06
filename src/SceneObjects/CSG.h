@@ -9,19 +9,29 @@ enum CSG_RELATION {
 	CSG_MINUS
 };
 
-struct SegmentPoint{
+class SegmentPoint{
+public:
 	double t;
 	vec3f normal;
 	bool isRight;
 	int contri;
+
+	bool operator<(const SegmentPoint& other){
+		return t < other.t - RAY_EPSILON;
+	}
 };
 
 class Segments{
-private:
-	vector<SegmentPoint> points;
 public:
-	Segments& Merge(const Segments& another, int relation);	
-	SegmentPoint firstPositive();
+	Segments() : mPoints(){}
+	Segments& Merge(const Segments& pSegments, int relation);
+	bool firstPositive(SegmentPoint& p);
+	void addPoint(SegmentPoint& pt)
+	{
+		mPoints.push_back(pt);
+	}
+private:
+	vector<SegmentPoint> mPoints;
 };
 
 class CSGNode 
@@ -36,22 +46,28 @@ public:
 	{
 		this->isLeaf = p;
 	}
+	BoundingBox getBoundingBox() const;
+	void computeBoundingBox();
+	Segments* intersectLocal(const ray& r) const;
 	CSGNode* lchild;
 	CSGNode* rchild;
 	Geometry* object;
 	CSG_RELATION relation;
 	bool isLeaf;
+	BoundingBox bound;
 };
 
 class CSGTree {
 public:
 	CSGTree() :root(NULL) {}
+	CSGTree(const CSGTree& other){
+		root = other.root;
+	}
 	CSGTree(CSGNode* nodes) : root(nodes) {}
 	CSGTree* merge(const CSGTree* pTree, CSG_RELATION relation);
 	bool intersect(const ray& r, isect& i) const;
 	CSGNode* getRoot() { return root; }
 private:
-	Segments* intersectLocal(const ray& r) const;
 	CSGNode* root;
 };
 
@@ -69,7 +85,7 @@ public:
 	virtual bool intersectLocal(const ray& r, isect& i) const;
 	virtual bool hasBoundingBoxCapability() const { return true; }
 	virtual bool hasInterior() const{ return true; }
-	virtual BoundingBox ComputeLocalBoundingBox() {};
+	virtual BoundingBox ComputeLocalBoundingBox();
 
 private:
 	CSGTree* tree;

@@ -17,11 +17,11 @@ using namespace std;
 #include "camera.h"
 #include "../vecmath/vecmath.h"
 #include <vector>
-#include "../SceneObjects/CSG.h"
 
 class Light;
 class Scene;
 extern class CSGNode;
+
 class SceneElement
 {
 public:
@@ -50,6 +50,7 @@ public:
 	// does the box contain this point?
 	bool intersects(const vec3f& point) const;
 
+	BoundingBox plus(const BoundingBox& other) const;
 	// if the ray hits the box, put the "t" value of the intersection
 	// closest to the origin in tMin and the "t" value of the far intersection
 	// in tMax and return true, else return false.
