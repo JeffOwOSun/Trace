@@ -51,6 +51,22 @@ void TraceUI::cb_save_image(Fl_Menu_* o, void* v)
 	}
 }
 
+void TraceUI::cb_load_background_image(Fl_Menu_* o, void* v)
+{
+	TraceUI* pUI = whoami(o);
+
+	char* newfile = fl_file_chooser("Open Image?", "*.bmp", NULL);
+	if (newfile != NULL) 
+	{
+		
+	}
+}
+
+void TraceUI::cb_clear_background_image(Fl_Menu_* o, void* v)
+{
+	TraceUI* pUI = whoami(o);
+}
+
 void TraceUI::cb_exit(Fl_Menu_* o, void* v)
 {
 	TraceUI* pUI=whoami(o);
@@ -205,6 +221,8 @@ Fl_Menu_Item TraceUI::menuitems[] = {
 	{ "&File",		0, 0, 0, FL_SUBMENU },
 		{ "&Load Scene...",	FL_ALT + 'l', (Fl_Callback *)TraceUI::cb_load_scene },
 		{ "&Save Image...",	FL_ALT + 's', (Fl_Callback *)TraceUI::cb_save_image },
+		{ "&Load Background...", FL_ALT + 'b', (Fl_Callback *)TraceUI::cb_load_background_image },
+		{ "&Clear Background...", FL_ALT + 'c', (Fl_Callback *)TraceUI::cb_clear_background_image },
 		{ "&Exit",			FL_ALT + 'e', (Fl_Callback *)TraceUI::cb_exit },
 		{ 0 },
 
