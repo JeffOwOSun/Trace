@@ -6,69 +6,31 @@ SBT-raytracer 1.0
 
 camera
 {
-	position = (8, 13, 8);
-	viewdir = (-0.5, -1, -0.5);
+	position = (10, 0, 3);
+	viewdir = (-1, 0, -0.3);
 	updir = (0, 0, 1);
 }
 
 point_light {
-	position = (0, -9, 9);
-	color = (1, 0, 0);
-}
-
-point_light {
-	position = (9, -9, 9);
-	color = (0, 1, 0);
-}
-
-point_light {
-	position = (-9, -9, 9);
-	color = (0, 0, 1);
+	position = (0, 5, 5);
+	color = (1, 1, 1);
 }
 
 // Sphere acts as a lens
-translate(4.5, 0, 1.5,
-	scale(1.5, 1.5, 1.5,
-		sphere {
-			material = {
-				diffuse = (0, 0, 0);
-				transmissive = (0.8, 0.8, 0.8);
-				reflective = (0.2, 0.2, 0.2);
-				index = 1.5;
-			}
-		}
-) )
+scale(1.5, 1.5, 1.5, sphere {
+	material = {
+		diffuse = (0, 0, 0);
+		transmissive = (0.9, 0.9, 0.9);
+		reflective = (0.1, 0.1, 0.1);
+		index = 1.5;
+	}
+} )
 
-// Sphere acts as a lens
-translate(0, 0, 1.5,
-	scale(1.5, 1.5, 1.5,
-		sphere {
+translate(0, 0, -1.5,
+	scale(20, 20, 0.01,
+		box {
 			material = {
-				diffuse = (0, 0, 0);
-				transmissive = (0.8, 0.8, 0.8);
-				reflective = (0.2, 0.2, 0.2);
-				index = 1.2;
+				diffuse = (0.2, 0.8, 0.8);
+				specular = (0.2, 0.2, 0.2);
 			}
-		}
-	) )
-
-// Sphere acts as a lens
-translate(-4.5, 0, 1.5,
-	scale(1.5, 1.5, 1.5,
-		sphere {
-			material = {
-				diffuse = (0, 0, 0);
-				transmissive = (0.8, 0.8, 0.8);
-				reflective = (0.2, 0.2, 0.2);
-				index = 1.2;
-			}
-		}
-	) )
-
-scale(100, 100, 0.01,
-	box {
-		material = {
-			diffuse = (0.2, 0.8, 0.8);
-			specular = (0.2, 0.2, 0.2);
-		}
-	})
+		}))
