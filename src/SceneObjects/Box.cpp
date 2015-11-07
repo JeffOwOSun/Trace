@@ -21,9 +21,6 @@ bool Box::intersectLocal(const ray& r, isect& i) const
 			//parallel to the planes
 			if (ori[axis] < lBound || ori[axis] > uBound) {
 				//the light ray is out side of the slab
-#ifdef _DEBUG
-				/*printf("out of slab!\n");*/
-#endif
 				return false;
 			}
 		}
@@ -55,15 +52,9 @@ bool Box::intersectLocal(const ray& r, isect& i) const
 		}
 		//return false if the ray misses the box or is behind the source
 		if (Tfar < Tnear || Tfar < RAY_EPSILON) {
-#ifdef _DEBUG
-			/*printf("missed the box! %f %f\n", Tnear, Tfar);*/
-#endif
 			return false;
 		}
 	}
-#ifdef _DEBUG
-	/*printf("intersects!\n");*/
-#endif
 	//congrats! this ray survived
 	i.setT(Tnear);
 	i.setN(Nnear);

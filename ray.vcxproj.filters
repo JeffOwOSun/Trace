@@ -117,6 +117,12 @@
     <ClCompile Include="src\SceneObjects\ParticleSys.cpp">
       <Filter>Source Files\SceneObjects</Filter>
     </ClCompile>
+    <ClCompile Include="src\PhotonMapping.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fileio\HeightField.cpp">
+      <Filter>Source Files\fileio</Filter>
+    </ClCompile>
     <ClCompile Include="src\SceneObjects\CSG.cpp">
       <Filter>Source Files\SceneObjects</Filter>
     </ClCompile>
@@ -178,6 +184,12 @@
     </ClInclude>
     <ClInclude Include="src\SceneObjects\ParticleSys.h">
       <Filter>Header Files\SceneObjects.</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PhotonMapping.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\fileio\HeightField.h">
+      <Filter>Header Files\fileio.</Filter>
     </ClInclude>
     <ClInclude Include="src\SceneObjects\CSG.h">
       <Filter>Header Files\SceneObjects.</Filter>
