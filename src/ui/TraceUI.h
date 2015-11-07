@@ -31,9 +31,14 @@ public:
 
 	Fl_Button*			m_renderButton;
 	Fl_Button*			m_stopButton;
+	Fl_Light_Button*	m_softShadowButton;
 
 	TraceGLWindow*		m_traceGlWindow;
 
+	bool IsEnableSoftShadow() const
+	{
+		return m_is_enable_soft_shadow;
+	}
 	// member functions
 	void show();
 
@@ -47,6 +52,7 @@ private:
 
 	int			m_nSize;
 	int			m_nDepth;
+	bool		m_is_enable_soft_shadow;
 
 // static class members
 	static Fl_Menu_Item menuitems[];
@@ -62,6 +68,7 @@ private:
 
 	static void cb_sizeSlides(Fl_Widget* o, void* v);
 	static void cb_depthSlides(Fl_Widget* o, void* v);
+	static void cb_softShadowButton(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);

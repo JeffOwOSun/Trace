@@ -78,6 +78,11 @@ void TraceUI::cb_about(Fl_Menu_* o, void* v)
 	fl_message("RayTracer Project, FLTK version for CS 341 Spring 2002. Latest modifications by Jeff Maurer, jmaurer@cs.washington.edu");
 }
 
+void TraceUI::cb_softShadowButton(Fl_Widget *o, void*)
+{
+	((TraceUI*)(o->user_data()))->m_is_enable_soft_shadow ^= true;
+}
+
 void TraceUI::cb_sizeSlides(Fl_Widget* o, void* v)
 {
 	TraceUI* pUI=(TraceUI*)(o->user_data());
@@ -214,7 +219,8 @@ TraceUI::TraceUI() {
 	// init.
 	m_nDepth = 0;
 	m_nSize = 150;
-	m_mainWindow = new Fl_Window(100, 40, 320, 100, "Ray <Not Loaded>");
+	m_is_enable_soft_shadow = false;
+	m_mainWindow = new Fl_Window(100, 40, 380, 200, "Ray <Not Loaded>");
 		m_mainWindow->user_data((void*)(this));	// record self to be used by static callback functions
 		// install menu bar
 		m_menubar = new Fl_Menu_Bar(0, 0, 320, 25);
@@ -245,6 +251,11 @@ TraceUI::TraceUI() {
 		m_sizeSlider->value(m_nSize);
 		m_sizeSlider->align(FL_ALIGN_RIGHT);
 		m_sizeSlider->callback(cb_sizeSlides);
+
+		m_softShadowButton = new Fl_Light_Button(240, 84, 110, 25, "Soft Shadow");
+		m_softShadowButton->user_data((void*)(this));
+		m_softShadowButton->value(0);
+		m_softShadowButton->callback(cb_softShadowButton);
 
 		m_renderButton = new Fl_Button(240, 27, 70, 25, "&Render");
 		m_renderButton->user_data((void*)(this));
