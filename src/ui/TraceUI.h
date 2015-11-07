@@ -28,6 +28,13 @@ public:
 
 	Fl_Slider*			m_sizeSlider;
 	Fl_Slider*			m_depthSlider;
+	// caustic
+	Fl_Light_Button*	m_traceButton;
+	Fl_Light_Button*	m_causticButton;
+	Fl_Slider*			m_photonNumSlider;
+	Fl_Slider*			m_queryNumSlider;
+	Fl_Slider*			m_coneFilterSlider;
+	Fl_Slider*			m_causticAmplifySlider;
 
 	Fl_Button*			m_renderButton;
 	Fl_Button*			m_stopButton;
@@ -56,6 +63,13 @@ private:
 
 	int			m_nSize;
 	int			m_nDepth;
+	//caustic
+	int			m_nPhotonNumOrder;
+	int			m_nQueryNum;
+	bool		m_bTrace;
+	bool		m_bCaustic;
+	double		m_dConeAtten;
+	double		m_dCausticAmplify;
 	bool		m_is_enable_soft_shadow;
 	bool		m_is_enable_fresnel;
 // static class members
@@ -65,6 +79,7 @@ private:
 
 	static void cb_load_scene(Fl_Menu_* o, void* v);
 	static void cb_save_image(Fl_Menu_* o, void* v);
+	static void cb_load_height_map(Fl_Menu_* o, void* v);
 	static void cb_load_background_image(Fl_Menu_* o, void* v);
 	static void cb_clear_background_image(Fl_Menu_* o, void* v);
 	static void cb_exit(Fl_Menu_* o, void* v);
@@ -74,6 +89,13 @@ private:
 
 	static void cb_sizeSlides(Fl_Widget* o, void* v);
 	static void cb_depthSlides(Fl_Widget* o, void* v);
+	//caustic
+	static void cb_traceToggle(Fl_Widget* o, void* v);
+	static void cb_causticToggle(Fl_Widget* o, void* v);
+	static void cb_photonNumberSlides(Fl_Widget* o, void* v);
+	static void cb_queryNumSlides(Fl_Widget* o, void* v);
+	static void cb_coneFilterSlides(Fl_Widget* o, void* v);
+	static void cb_causticAmplifySlides(Fl_Widget* o, void* v);
 	static void cb_softShadowButton(Fl_Widget* o, void* v);
 		
 

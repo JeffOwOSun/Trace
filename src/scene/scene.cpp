@@ -77,8 +77,8 @@ BoundingBox BoundingBox::plus(const BoundingBox& other) const {
 	BoundingBox ret;
 	ret = *this;
 	for (int i = 0; i < 3; i++){
-		ret.min[i] = min(ret.min[i], other.min[i]);
-		ret.max[i] = max(ret.max[i], other.max[i]);
+		ret.min[i] = std::min(ret.min[i], other.min[i]);
+		ret.max[i] = std::max(ret.max[i], other.max[i]);
 	}
 	return ret;
 }

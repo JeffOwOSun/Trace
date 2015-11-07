@@ -1,5 +1,5 @@
 #include <cmath>
-
+#include <set>
 #include "light.h"
 #include "../ui/TraceUI.h"
 
@@ -45,11 +45,14 @@ vec3f DirectionalLight::getDirection( const vec3f& P ) const
 }
 
 PointLight::PointLight(Scene *scene, const vec3f& pos, const vec3f& color)
- : Light(scene, color),
+	: Light(scene, color),
 	position(pos),
 	m_const_atten_coeff(0.0),
 	m_linear_atten_coeff(0.0),
-	m_quadratic_atten_coeff(0.0)
+	m_quadratic_atten_coeff(0.0),
+	m_photon_dir_dist1(-1.0, 1.0),
+	m_photon_dir_dist2(-1.0, 1.0),
+	m_refractive_index(-1.0)
 {}
 
 double PointLight::distanceAttenuation( const vec3f& P ) const
@@ -130,6 +133,51 @@ void PointLight::setDistanceAttenuation(const double constant,
 	m_const_atten_coeff = constant;
 	m_linear_atten_coeff = linear;
 	m_quadratic_atten_coeff = quadratic;
+}
+
+ray PointLight::getPhoton(std::default_random_engine &generator) const
+{
+	double x1, x2, x0;
+	do {
+		x1 = m_photon_dir_dist1(generator);
+		x2 = m_photon_dir_dist2(generator);
+	} while ((x0 = x1 * x1 + x2 * x2) >= 1);
+	double x = 2 * x1 * sqrt(1 - x0);
+	double y = 2 * x2 * sqrt(1 - x0);
+	double z = 1 - 2 * x0;
+	vec3f dir(x, y, z); //this random direction is uniformly distributed on the unit sphere;
+	return ray(position, dir);
+}
+
+double PointLight::getCumulativeIndex() {
+	if (m_refractive_index > 0) return m_refractive_index;
+	//calculate the refractive index
+	std::default_random_engine generator;
+	//randomly pick a ray
+	ray r = getPhoton(generator);
+	//trace the ray
+	multiset<const SceneObject*> objs;
+	isect i;
+	while (scene->intersect(r, i)) {
+		if (i.obj->hasInterior()) { //only care about volumetric shapes
+			if (r.getDirection().dot(i.N) > RAY_EPSILON) { //going out of the material
+				if (objs.find(i.obj) == objs.end()) { //not found in the set
+					//that must be one.
+					m_refractive_index *= i.getMaterial().index;
+					r = ray(r.at(i.t), r.getDirection());
+				}
+				else { //found the same object already
+					objs.erase(i.obj);
+					r = ray(r.at(i.t), r.getDirection());
+				}
+			}
+			else { //going into the material
+				objs.insert(i.obj);
+				r = ray(r.at(i.t), r.getDirection());
+			}
+		}
+	}
+	return m_refractive_index;
 }
 
 double AmbientLight::distanceAttenuation(const vec3f& P) const
