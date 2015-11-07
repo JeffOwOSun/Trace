@@ -3,9 +3,12 @@
 //
 // Handles FLTK integration and other user interface tasks
 //
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
+#include <cstdio>
+#include <ctime>
+#include <cstring>
+#include <chrono>
+#include <future>
+#include <vector>
 
 #include <FL/fl_ask.h>
 
@@ -119,80 +122,100 @@ void TraceUI::cb_depthSlides(Fl_Widget* o, void* v)
 	((TraceUI*)(o->user_data()))->m_nDepth=int( ((Fl_Slider *)o)->value() ) ;
 }
 
+void TraceUI::cb_threadSlides(Fl_Widget* o, void*)
+{
+	((TraceUI*)(o->user_data()))->m_thread = ((Fl_Slider*)o)->value();
+}
+
+void TraceUI::RenderWorker(TraceUI *ui, const int from_y, const int to_y, const int w)
+{
+	for (int y = from_y; y < to_y && !done; ++y)
+	{
+		for (int x = 0; x < w && !done; ++x)
+		{
+			ui->raytracer->tracePixel(x, y);
+		}
+	}
+}
+
+
 void TraceUI::cb_render(Fl_Widget* o, void* v)
 {
 	char buffer[256];
 
-	TraceUI* pUI=((TraceUI*)(o->user_data()));
-	
+	TraceUI* pUI = ((TraceUI*)(o->user_data()));
+
 	if (pUI->raytracer->sceneLoaded()) {
-		int width=pUI->getSize();
+
+		int width = pUI->getSize();
 		int	height = (int)(width / pUI->raytracer->aspectRatio() + 0.5);
-		pUI->m_traceGlWindow->resizeWindow( width, height );
+		pUI->m_traceGlWindow->resizeWindow(width, height);
 
 		pUI->m_traceGlWindow->show();
 
 		pUI->raytracer->traceSetup(width, height);
-		
+
 		// Save the window label
 		const char *old_label = pUI->m_traceGlWindow->label();
 
-		// start to render here	
-		done=false;
+		// start to render here
+		done = false;
 		clock_t prev, now;
-		prev=clock();
-		
+		prev = clock();
+
 		pUI->m_traceGlWindow->refresh();
 		Fl::check();
 		Fl::flush();
 
-		for (int y=0; y<height; y++) {
-			for (int x=0; x<width; x++) {
-				if (done) break;
-				
-				// current time
-				now = clock();
+		vector<future<void>> workers;
+		const int partition = height / pUI->getThread();
+		for (int i = 0; i < pUI->getThread() - 1; ++i)
+		{
+			workers.push_back(async(launch::async, RenderWorker, pUI,
+				partition * i, partition * (i + 1), width));
+		}
+		workers.push_back(async(launch::async, RenderWorker, pUI,
+			partition * (pUI->getThread() - 1), height, width));
 
-				// check event every 1/2 second
-				if (((double)(now-prev)/CLOCKS_PER_SEC)>0.5) {
-					prev=now;
+		bool is_all_joined = false;
+		do
+		{
+			// current time
+			now = clock();
 
-					if (Fl::ready()) {
-						// refresh
-						pUI->m_traceGlWindow->refresh();
-						// check event
-						Fl::check();
+			// check event every 1/2 second
+			if (((double)(now - prev) / CLOCKS_PER_SEC)>0.5)
+			{
+				prev = now;
 
-						if (Fl::damage()) {
-							Fl::flush();
-						}
+				if (Fl::ready()) {
+					// refresh
+					pUI->m_traceGlWindow->refresh();
+					// check event
+					Fl::check();
+
+					if (Fl::damage()) {
+						Fl::flush();
 					}
 				}
-
-				pUI->raytracer->tracePixel( x, y );
-		
 			}
-			if (done) break;
 
-			// flush when finish a row
-			if (Fl::ready()) {
-				// refresh
-				pUI->m_traceGlWindow->refresh();
-
-				if (Fl::damage()) {
-					Fl::flush();
+			is_all_joined = true;
+			for (const auto &w : workers)
+			{
+				if (w.wait_for(chrono::milliseconds(100))
+					!= future_status::ready)
+				{
+					is_all_joined = false;
 				}
 			}
-			// update the window label
-			sprintf(buffer, "(%d%%) %s", (int)((double)y / (double)height * 100.0), old_label);
-			pUI->m_traceGlWindow->label(buffer);
-			
-		}
-		done=true;
+		} while (!is_all_joined);
+
+		done = true;
 		pUI->m_traceGlWindow->refresh();
 
 		// Restore the window label
-		pUI->m_traceGlWindow->label(old_label);		
+		pUI->m_traceGlWindow->label(old_label);
 	}
 }
 
@@ -245,6 +268,7 @@ TraceUI::TraceUI() {
 	m_nSize = 150;
 	m_is_enable_soft_shadow = false;
 	m_is_enable_fresnel = false;
+	m_thread = 1;
 	m_mainWindow = new Fl_Window(100, 40, 380, 200, "Ray <Not Loaded>");
 		m_mainWindow->user_data((void*)(this));	// record self to be used by static callback functions
 		// install menu bar
@@ -276,6 +300,18 @@ TraceUI::TraceUI() {
 		m_sizeSlider->value(m_nSize);
 		m_sizeSlider->align(FL_ALIGN_RIGHT);
 		m_sizeSlider->callback(cb_sizeSlides);
+
+		m_threadSlider = new Fl_Value_Slider(10, 80, 180, 20, "Thread");
+		m_threadSlider->user_data((void*)(this));	// record self to be used by static callback functions
+		m_threadSlider->type(FL_HOR_NICE_SLIDER);
+		m_threadSlider->labelfont(FL_COURIER);
+		m_threadSlider->labelsize(12);
+		m_threadSlider->minimum(1);
+		m_threadSlider->maximum(8);
+		m_threadSlider->step(1);
+		m_threadSlider->value(m_thread);
+		m_threadSlider->align(FL_ALIGN_RIGHT);
+		m_threadSlider->callback(cb_threadSlides);
 
 		m_softShadowButton = new Fl_Light_Button(240, 84, 110, 25, "Soft Shadow");
 		m_softShadowButton->user_data((void*)(this));

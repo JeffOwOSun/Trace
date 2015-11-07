@@ -28,6 +28,7 @@ public:
 
 	Fl_Slider*			m_sizeSlider;
 	Fl_Slider*			m_depthSlider;
+	Fl_Slider*			m_threadSlider;
 
 	Fl_Button*			m_renderButton;
 	Fl_Button*			m_stopButton;
@@ -50,12 +51,17 @@ public:
 
 	int			getSize();
 	int			getDepth();
+	int	getThread() const
+	{
+		return m_thread;
+	}
 
 private:
 	RayTracer*	raytracer;
 
 	int			m_nSize;
 	int			m_nDepth;
+	int			m_thread;
 	bool		m_is_enable_soft_shadow;
 	bool		m_is_enable_fresnel;
 // static class members
@@ -75,10 +81,12 @@ private:
 	static void cb_sizeSlides(Fl_Widget* o, void* v);
 	static void cb_depthSlides(Fl_Widget* o, void* v);
 	static void cb_softShadowButton(Fl_Widget* o, void* v);
-		
+	static void cb_threadSlides(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);
+
+	static void RenderWorker(TraceUI *ui, const int from_y, const int to_y, const int w);
 };
 
 #endif
