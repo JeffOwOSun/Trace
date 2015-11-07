@@ -123,6 +123,9 @@
     <ClCompile Include="src\fileio\HeightField.cpp">
       <Filter>Source Files\fileio</Filter>
     </ClCompile>
+    <ClCompile Include="src\SceneObjects\CSG.cpp">
+      <Filter>Source Files\SceneObjects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\RayTracer.h">
@@ -187,6 +190,9 @@
     </ClInclude>
     <ClInclude Include="src\fileio\HeightField.h">
       <Filter>Header Files\fileio.</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SceneObjects\CSG.h">
+      <Filter>Header Files\SceneObjects.</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

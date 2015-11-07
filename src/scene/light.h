@@ -47,6 +47,13 @@ public:
 	virtual vec3f getColor( const vec3f& P ) const;
 	virtual vec3f getDirection( const vec3f& P ) const;
 	void setDistanceAttenuation(const double constant, const double linear, const double quadratic);
+	/**
+	 * \brief Helper function, for easy implemente soft shadow
+	 * \param P the point which intersect
+	 * \param r the light
+	 * \return the shade effect on this point
+	 */
+	vec3f _shadowAttenuation(const vec3f& P, const ray& r) const;
 	virtual ray getPhoton(std::default_random_engine &generator) const;
 	virtual double getCumulativeIndex();
 protected:

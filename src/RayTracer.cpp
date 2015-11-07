@@ -10,6 +10,7 @@
 #include "fileio/parse.h"
 #include "fileio/HeightField.h"
 #include "ui/TraceUI.h"
+#include "fileio/bitmap.h"
 
 extern TraceUI* traceUI;
 
@@ -41,22 +42,25 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 			//shade += m_photon_map.shadeCaustic(r.at(i.t));
 			shade += m_photon_map.shade(r.at(i.t));
 		}
-		
+
 		if (m_bTrace) {
+
 			const Material& m = i.getMaterial();
 			shade += m.shade(scene, r, i);
-			if (depth >= traceUI->getDepth())
+			if (depth >= traceUI->getDepth()) 
 				return shade;
 
-			vec3f conPoint = r.at(i.t);
+			vec3f conPoint = r.at(i.t); 
 			vec3f normal;
 			vec3f Rdir = 2 * (i.N*-r.getDirection()) * i.N - (-r.getDirection());
 			ray R = ray(conPoint, Rdir);
-
+		
+			const double fresnel_coeff = getFresnelCoeff(i, r);
+			//cout << fresnel_coeff << endl;
 			// Reflection part
-			if (!i.getMaterial().kr.iszero())
+			if (!i.getMaterial().kr.iszero()) 
 			{
-				shade += prod(i.getMaterial().kr, traceRay(scene, R, thresh, depth + 1));
+				shade += (fresnel_coeff*prod(i.getMaterial().kr, traceRay(scene, R, thresh, depth + 1)));
 			}
 
 			// Refraction part
@@ -135,7 +139,7 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 						double cos_t = sqrt(1 - sin_t*sin_t);
 						vec3f Tdir = (indexRatio*cos_i - cos_t)*normal - indexRatio*-r.getDirection();
 						oppR = ray(conPoint, Tdir);
-						shade += prod(i.getMaterial().kt, traceRay(scene, oppR, thresh, depth + 1));
+						shade += (fresnel_coeff*prod(i.getMaterial().kt, traceRay(scene, oppR, thresh, depth + 1)));
 					}
 				}
 
@@ -154,12 +158,115 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 		return shade;
 	}
 	else {
-		return vec3f(0.0, 0.0, 0.0);
+		// when the light go to infinity
+		// If already set a background image, return the image pixel
+		// otherwise just black
+		if (useBackground)
+		{
+			vec3f x = scene->getCamera()->getU();
+			vec3f y = scene->getCamera()->getV();
+			vec3f z = scene->getCamera()->getLook();
+			double dis_x = r.getDirection() * x;
+			double dis_y = r.getDirection() * y;
+			double dis_z = r.getDirection() * z;
+			return getBackgroundImage(dis_x / dis_z + 0.5, dis_y / dis_z + 0.5);
+		}
+		else
+		{
+			return vec3f(0.0, 0.0, 0.0);
+		}
+	}
+}
+
+double RayTracer::getFresnelCoeff(isect& i, const ray& r)
+{
+	if (i.obj->hasInterior())
+	{
+		double indexA, indexB;
+		if (i.N*r.getDirection() > RAY_EPSILON)
+		{
+			if (mediaHistory.empty())
+			{
+				indexA = 1.0;
+			}
+			else
+			{
+				indexA = mediaHistory.rbegin()->second.index;
+			}
+			mediaHistory.erase(i.obj->getOrder());
+			if (mediaHistory.empty())
+			{
+				indexB = 1.0;
+			}
+			else
+			{
+				indexB = mediaHistory.rbegin()->second.index;
+			}
+			mediaHistory.insert(make_pair(i.obj->getOrder(), i.getMaterial()));
+		}
+		// For ray get in the object
+		else
+		{
+			if (mediaHistory.empty())
+			{
+				indexA = 1.0;
+			}
+			else
+			{
+				indexA = mediaHistory.rbegin()->second.index;
+			}
+			mediaHistory.insert(make_pair(i.obj->getOrder(), i.getMaterial()));
+			indexB = mediaHistory.rbegin()->second.index;
+			mediaHistory.erase(i.obj->getOrder());
+		}
+
+		double r0 = (indexA - indexB) / (indexA + indexB);
+		r0 = r0 * r0;
+		const double dot_rn = i.N.dot(-r.getDirection());
+
+		if (indexA <= indexB)
+		{
+			return r0 + (1 - r0)*pow(1 - dot_rn, 5);
+		}
+		else
+		{
+			cout << "aaa" << endl;
+			return 1.0;
+			/*const double nr = indexA / indexB;
+			const double root = 1 - nr * nr * (1 - dot_rn * dot_rn);
+			if (root <= 0.0)
+			{
+				return 1.0;
+			}
+			else
+			{
+				cout << "now index is " << indexA << " " << indexB << endl;
+				
+				const double cos_theta_t = sqrt(1 - (indexA / indexB));
+				printf("And the ratio is %.25f\n", cos_theta_t);
+				return r0 + (1 - r0) * pow(1 - cos_theta_t, 5);
+			}*/
+		}
+	}
+	else
+	{
+		return 1.0;
+	}
+}
+
+void RayTracer::loadBackground(char* fn)
+{
+	unsigned char* data = NULL;
+	data = readBMP(fn, background_width, background_height);
+	if (data){
+		if (backgroundImage) delete[] backgroundImage;
+		useBackground = true;
+		backgroundImage = data;
 	}
 }
 
 RayTracer::RayTracer() : 
-mediaHistory(), m_bCaustic(false), m_bTrace(false)
+mediaHistory(), m_bCaustic(false), m_bTrace(false), backgroundImage(NULL), useBackground(false)
 {
 	buffer = NULL;
 	buffer_width = buffer_height = 256;
@@ -168,9 +275,31 @@ mediaHistory(), m_bCaustic(false), m_bTrace(false)
 	m_bSceneLoaded = false;
 }
 
+void RayTracer::clearBackground(){
+	if (backgroundImage) delete[] backgroundImage;
+	backgroundImage = NULL;
+	useBackground = false;
+	background_height = background_width = 0;
+}
+
+vec3f RayTracer::getBackgroundImage(double x, double y){
+	if (!useBackground) return vec3f(0, 0, 0);
+	int xGrid = int(x*background_width);
+	int yGrid = int(y*background_height);
+	if (xGrid < 0 || xGrid >= background_width || yGrid < 0 || yGrid >= background_height) 
+	{
+		return vec3f(0, 0, 0);
+	}
+	double val1 = backgroundImage[(yGrid*background_width + xGrid) * 3] / 255.0;
+	double val2 = backgroundImage[(yGrid*background_width + xGrid) * 3 + 1] / 255.0;
+	double val3 = backgroundImage[(yGrid*background_width + xGrid) * 3 + 2] / 255.0;
+	return vec3f(val1, val2, val3);
+}
+
 
 RayTracer::~RayTracer()
 {
+	if (backgroundImage) delete[] backgroundImage;
 	delete [] buffer;
 	delete scene;
 }

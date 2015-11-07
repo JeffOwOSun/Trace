@@ -72,6 +72,23 @@ void TraceUI::cb_load_height_map(Fl_Menu_* o, void* v)
 	}
 }
 
+void TraceUI::cb_load_background_image(Fl_Menu_* o, void* v)
+{
+	TraceUI* pUI = whoami(o);
+
+	char* newfile = fl_file_chooser("Open Image?", "*.bmp", NULL);
+	if (newfile != NULL) 
+	{
+		pUI->raytracer->loadBackground(newfile);
+	}
+}
+
+void TraceUI::cb_clear_background_image(Fl_Menu_* o, void* v)
+{
+	TraceUI* pUI = whoami(o);
+	pUI->raytracer->clearBackground();
+}
+
 void TraceUI::cb_exit(Fl_Menu_* o, void* v)
 {
 	TraceUI* pUI=whoami(o);
@@ -97,6 +114,11 @@ void TraceUI::cb_exit2(Fl_Widget* o, void* v)
 void TraceUI::cb_about(Fl_Menu_* o, void* v) 
 {
 	fl_message("RayTracer Project, FLTK version for CS 341 Spring 2002. Latest modifications by Jeff Maurer, jmaurer@cs.washington.edu");
+}
+
+void TraceUI::cb_softShadowButton(Fl_Widget *o, void*)
+{
+	((TraceUI*)(o->user_data()))->m_is_enable_soft_shadow ^= true;
 }
 
 void TraceUI::cb_sizeSlides(Fl_Widget* o, void* v)
@@ -264,6 +286,8 @@ Fl_Menu_Item TraceUI::menuitems[] = {
 		{ "&Load Scene...",	FL_ALT + 'l', (Fl_Callback *)TraceUI::cb_load_scene },
 		{ "&Save Image...", FL_ALT + 's', (Fl_Callback *)TraceUI::cb_save_image },
 		{ "&Load Height Map...", FL_ALT + 's', (Fl_Callback *)TraceUI::cb_load_height_map },
+		{ "&Load Background...", FL_ALT + 'b', (Fl_Callback *)TraceUI::cb_load_background_image },
+		{ "&Clear Background...", FL_ALT + 'c', (Fl_Callback *)TraceUI::cb_clear_background_image },
 		{ "&Exit",			FL_ALT + 'e', (Fl_Callback *)TraceUI::cb_exit },
 		{ 0 },
 
@@ -284,7 +308,8 @@ TraceUI::TraceUI() {
 	m_nQueryNum = 3;
 	m_dConeAtten = -100;
 	m_dCausticAmplify = 1.0;
-	m_mainWindow = new Fl_Window(100, 40, 320, 215, "Ray <Not Loaded>");
+	m_is_enable_soft_shadow = false;
+	m_mainWindow = new Fl_Window(100, 40, 320, 240, "Ray <Not Loaded>");
 		m_mainWindow->user_data((void*)(this));	// record self to be used by static callback functions
 		// install menu bar
 		m_menubar = new Fl_Menu_Bar(0, 0, 320, 25);
@@ -377,6 +402,11 @@ TraceUI::TraceUI() {
 		m_causticAmplifySlider->value(m_dCausticAmplify);
 		m_causticAmplifySlider->align(FL_ALIGN_RIGHT);
 		m_causticAmplifySlider->callback(cb_causticAmplifySlides);
+
+		m_softShadowButton = new Fl_Light_Button(10, 205, 110, 20, "Soft Shadow");
+		m_softShadowButton->user_data((void*)(this));
+		m_softShadowButton->value(0);
+		m_softShadowButton->callback(cb_softShadowButton);
 
 		m_renderButton = new Fl_Button(240, 27, 70, 25, "&Render");
 		m_renderButton->user_data((void*)(this));

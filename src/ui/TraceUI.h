@@ -38,9 +38,14 @@ public:
 
 	Fl_Button*			m_renderButton;
 	Fl_Button*			m_stopButton;
+	Fl_Light_Button*	m_softShadowButton;
 
 	TraceGLWindow*		m_traceGlWindow;
 
+	bool IsEnableSoftShadow() const
+	{
+		return m_is_enable_soft_shadow;
+	}
 	// member functions
 	void show();
 
@@ -61,6 +66,7 @@ private:
 	bool		m_bCaustic;
 	double		m_dConeAtten;
 	double		m_dCausticAmplify;
+	bool		m_is_enable_soft_shadow;
 
 // static class members
 	static Fl_Menu_Item menuitems[];
@@ -70,6 +76,8 @@ private:
 	static void cb_load_scene(Fl_Menu_* o, void* v);
 	static void cb_save_image(Fl_Menu_* o, void* v);
 	static void cb_load_height_map(Fl_Menu_* o, void* v);
+	static void cb_load_background_image(Fl_Menu_* o, void* v);
+	static void cb_clear_background_image(Fl_Menu_* o, void* v);
 	static void cb_exit(Fl_Menu_* o, void* v);
 	static void cb_about(Fl_Menu_* o, void* v);
 
@@ -84,6 +92,7 @@ private:
 	static void cb_queryNumSlides(Fl_Widget* o, void* v);
 	static void cb_coneFilterSlides(Fl_Widget* o, void* v);
 	static void cb_causticAmplifySlides(Fl_Widget* o, void* v);
+	static void cb_softShadowButton(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);
