@@ -58,13 +58,14 @@ void TraceUI::cb_load_background_image(Fl_Menu_* o, void* v)
 	char* newfile = fl_file_chooser("Open Image?", "*.bmp", NULL);
 	if (newfile != NULL) 
 	{
-		
+		pUI->raytracer->loadBackground(newfile);
 	}
 }
 
 void TraceUI::cb_clear_background_image(Fl_Menu_* o, void* v)
 {
 	TraceUI* pUI = whoami(o);
+	pUI->raytracer->clearBackground();
 }
 
 void TraceUI::cb_exit(Fl_Menu_* o, void* v)

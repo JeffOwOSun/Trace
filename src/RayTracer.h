@@ -24,13 +24,20 @@ public:
 	void tracePixel( int i, int j );
 
 	bool loadScene( char* fn );
+	void loadBackground(char* fn);
+
+	vec3f getBackgroundImage(double x, double y);
+	void clearBackground();
 
 	bool sceneLoaded();
 
 private:
+	bool useBackground;
+	unsigned char *backgroundImage;
 	unsigned char *buffer;
 	int buffer_width, buffer_height;
 	int bufferSize;
+	int background_height, background_width;
 	Scene *scene;
 	std::map<int, Material> mediaHistory;
 	bool m_bSceneLoaded;
