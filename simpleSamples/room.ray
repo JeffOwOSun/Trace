@@ -1,0 +1,135 @@
+SBT-raytracer 1.0
+
+// cyl_cyl_refract.ray
+// Test the refraction term
+// Don't forget to increase the trace depth to >= 2!
+
+camera
+{
+	position = (30, 0, 0);
+	viewdir = (-1, 0, 0);
+	updir = (0, 0, 1);
+}
+
+//real light array
+point_light {
+	position = (0, 0, 9.9);
+	color = (1, 1, 1);
+}
+point_light {
+	position = (10, 0, 9.9);
+	color = (1, 1, 1);
+}
+point_light {
+	position = (-10, 0, 9.9);
+	color = (1, 1, 1);
+}
+point_light {
+	position = (0, 10, 9.9);
+	color = (1, 1, 1);
+}
+point_light {
+	position = (10, 10, 9.9);
+	color = (1, 1, 1);
+}
+point_light {
+	position = (-10, 10, 9.9);
+	color = (1, 1, 1);
+}
+point_light {
+	position = (0, -10, 9.9);
+	color = (1, 1, 1);
+}
+point_light {
+	position = (10, -10, 9.9);
+	color = (1, 1, 1);
+}
+point_light {
+	position = (-10, -10, 9.9);
+	color = (1, 1, 1);
+}
+
+// Sphere acts as a lens
+translate(-2, -2, -6,
+	scale(4, 4, 4, sphere {
+		material = {
+			diffuse = (0, 0, 0);
+			transmissive = (0.5, 0.5, 0.5);
+			reflective = (0.5, 0.5, 0.5);
+			index = 1.5;
+		}
+	} ))
+
+//Ceiling
+translate(0, 0, 10,
+	scale(20, 20, 0.01,
+		box {
+			material = {
+				diffuse = (1.0, 1.0, 1.0);
+			}
+		}
+	)
+)
+
+//Light that looks as if it's light
+translate(0, 0, 10,
+	scale(10, 10, 0.1,
+		box {
+			material = {
+				emissive = (1.0, 1.0, 1.0);
+			}
+		}
+	)
+)
+
+//Bottom
+translate(0, 0, -10,
+	scale(20, 20, 0.01,
+		box {
+			material = {
+				diffuse = (0.1, 0.1, 0.1);
+				specular = (0.01, 0.01, 0.01);
+				shininess = 3;
+			}
+		}
+	)
+)
+
+//Left wall
+translate(0, -10, 0,
+	scale(20, 0.01, 20,
+		box {
+			material = {
+				diffuse = (0.9, 0, 0);
+				specular = (0.1, 0.1, 0.1);
+				shininess = 3;
+			}
+		}
+	)
+)
+
+//Central wall
+translate(-10, 0, 0,
+	scale(0.01, 20, 20,
+		box {
+			material = {
+				diffuse = (0.9, 0.9, 0.9);
+				specular = (0.1, 0.1, 0.1);
+				shininess = 3;
+			}
+		}
+	)
+)
+
+//Right wall
+translate(0, 10, 0,
+	scale(20, 0.01, 20,
+		box {
+			material = {
+				diffuse = (0, 0, 0.9);
+				specular = (0, 0, 0.1);
+				shininess = 3;
+			}
+		}
+	)
+)
