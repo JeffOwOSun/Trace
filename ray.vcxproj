@@ -147,6 +147,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\fileio\HeightField.cpp" />
     <ClCompile Include="src\getopt.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -271,6 +272,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\fileio\HeightField.h" />
     <ClInclude Include="src\PhotonMapping.h" />
     <ClInclude Include="src\RayTracer.h" />
     <ClInclude Include="src\SceneObjects\ParticleSys.h" />

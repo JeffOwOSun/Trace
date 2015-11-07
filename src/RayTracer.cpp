@@ -8,6 +8,7 @@
 #include "scene/ray.h"
 #include "fileio/read.h"
 #include "fileio/parse.h"
+#include "fileio/HeightField.h"
 #include "ui/TraceUI.h"
 
 extern TraceUI* traceUI;
@@ -217,6 +218,37 @@ bool RayTracer::loadScene( char* fn )
 	
 	// Add any specialized scene loading code here
 	
+	m_bSceneLoaded = true;
+
+	return true;
+}
+
+bool RayTracer::loadHeightMap(char* fn)
+{
+	try
+	{
+		scene = readHeights(fn);
+	}
+	catch (ParseError pe)
+	{
+		fl_alert("ParseError: %s\n", pe);
+		return false;
+	}
+
+	if (!scene)
+		return false;
+
+	buffer_width = 256;
+	buffer_height = (int)(buffer_width / scene->getCamera()->getAspectRatio() + 0.5);
+
+	bufferSize = buffer_width * buffer_height * 3;
+	buffer = new unsigned char[bufferSize];
+
+	// separate objects into bounded and unbounded
+	scene->initScene();
+
+	// Add any specialized scene loading code here
+
 	m_bSceneLoaded = true;
 
 	return true;

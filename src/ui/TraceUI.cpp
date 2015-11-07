@@ -51,6 +51,27 @@ void TraceUI::cb_save_image(Fl_Menu_* o, void* v)
 	}
 }
 
+void TraceUI::cb_load_height_map(Fl_Menu_* o, void* v)
+{
+	TraceUI* pUI = whoami(o);
+
+	char* newfile = fl_file_chooser("Open Height Map?", "*.bmp", NULL);
+
+	if (newfile != NULL) {
+		char buf[256];
+
+		if (pUI->raytracer->loadHeightMap(newfile)) {
+			sprintf(buf, "Height Map <%s>", newfile);
+			done = true;	// terminate the previous rendering
+		}
+		else{
+			sprintf(buf, "Height Map <Not Loaded>");
+		}
+
+		pUI->m_mainWindow->label(buf);
+	}
+}
+
 void TraceUI::cb_exit(Fl_Menu_* o, void* v)
 {
 	TraceUI* pUI=whoami(o);
@@ -241,7 +262,8 @@ int TraceUI::getDepth()
 Fl_Menu_Item TraceUI::menuitems[] = {
 	{ "&File",		0, 0, 0, FL_SUBMENU },
 		{ "&Load Scene...",	FL_ALT + 'l', (Fl_Callback *)TraceUI::cb_load_scene },
-		{ "&Save Image...",	FL_ALT + 's', (Fl_Callback *)TraceUI::cb_save_image },
+		{ "&Save Image...", FL_ALT + 's', (Fl_Callback *)TraceUI::cb_save_image },
+		{ "&Load Height Map...", FL_ALT + 's', (Fl_Callback *)TraceUI::cb_load_height_map },
 		{ "&Exit",			FL_ALT + 'e', (Fl_Callback *)TraceUI::cb_exit },
 		{ 0 },
 
