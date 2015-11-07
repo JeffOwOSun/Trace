@@ -1,0 +1,53 @@
+SBT-raytracer 1.0
+
+// box_cyl_opaque_shadow.ray
+// Test opaque shadows
+
+camera
+{
+	position = (15, 0, 5);
+	viewdir = (-1, 0, -.3);
+	updir = (0, 0, 1);
+}
+
+point_light
+{
+	position = (3, 2, 3);
+	color = (1, 1, 1);
+	constant_attenuation_coeff= 0.25;
+	linear_attenuation_coeff = 0.003372407;
+	quadratic_attenuation_coeff = 0.000045492;	
+}
+
+point_light
+{
+	position = (3, -2, 3);
+	color = (1, 1, 1);
+	constant_attenuation_coeff= 0.25;
+	linear_attenuation_coeff = 0.003372407;
+	quadratic_attenuation_coeff = 0.000045492;	
+}
+
+
+
+translate( 0, 0, -3,
+	scale( 15, 15, 1, 
+		box {
+			material = { 
+				diffuse = (0.54, 0.49, 0.4); 
+				specular=( 0.2,0.2,0.2);
+ 				shininess=1;
+			}
+		} ) )
+
+
+
+scale(0.2, 1.5, 1.5, sphere {
+	material = { 
+		diffuse = (0.2, 0.2, 0.2);
+		specular=( 0.9,0.9,0.9);
+		transmissive = (0.4, 0.4, 0.4);
+ 		shininess=0.001;
+		index = 3;
+	}
+} )
