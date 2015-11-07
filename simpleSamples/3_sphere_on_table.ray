@@ -33,7 +33,7 @@ translate(4.5, 0, 1.5,
 			material = {
 				diffuse = (0, 0, 0);
 				transmissive = (0.8, 0.8, 0.8);
-				reflective = (0.2, 0.2, 0.2);
+				reflective = (0, 0, 0);
 				index = 1.5;
 			}
 		}
@@ -46,7 +46,7 @@ translate(0, 0, 1.5,
 			material = {
 				diffuse = (0, 0, 0);
 				transmissive = (0.8, 0.8, 0.8);
-				reflective = (0.2, 0.2, 0.2);
+				reflective = (0, 0, 0);
 				index = 1.2;
 			}
 		}
@@ -59,7 +59,7 @@ translate(-4.5, 0, 1.5,
 			material = {
 				diffuse = (0, 0, 0);
 				transmissive = (0.8, 0.8, 0.8);
-				reflective = (0.2, 0.2, 0.2);
+				reflective = (0, 0, 0);
 				index = 1.2;
 			}
 		}
@@ -68,7 +68,7 @@ translate(-4.5, 0, 1.5,
 scale(100, 100, 0.01,
 	box {
 		material = {
-			diffuse = (0.2, 0.8, 0.8);
-			specular = (0.2, 0.2, 0.2);
+			diffuse = (1.0, 1.0, 1.0);
+			specular = (0, 0, 0);
 		}
 	})
