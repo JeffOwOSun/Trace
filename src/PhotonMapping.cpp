@@ -51,7 +51,7 @@ void PhotonMap::generatePhotons(PointCloud<T> &point, const Scene* scene, const 
 				if (epsilon <= pr / p) {
 					//reflected
 					//modify the intensity
-					intensity = prod(m.kr, intensity) / pr;
+					//intensity = prod(m.kr, intensity) / pr;
 					//continue the tracing with new ray
 					vec3f dir = r.getDirection();
 					dir = dir + 2 * dir.dot(i.N) * i.N;
@@ -92,7 +92,7 @@ void PhotonMap::generatePhotons(PointCloud<T> &point, const Scene* scene, const 
 							vec3f dir = (relative_index * cos_i - cos_r) * i.N + relative_index * r.getDirection();
 							r = ray(r.at(i.t), dir);
 							//attenune the intensity of refracted ray
-							intensity = prod(m.kt, intensity) / pt;
+							//intensity = prod(m.kt, intensity) / pt;
 							//accumulate the relative_index
 							cumulative_index /= relative_index;
 
@@ -106,7 +106,7 @@ void PhotonMap::generatePhotons(PointCloud<T> &point, const Scene* scene, const 
 				//=====specular reflection=====
 				else if (epsilon <= (pr + pt + ps) / p) {
 					//specular reflected
-					intensity = prod(m.ks, intensity) / ps;
+					//intensity = prod(m.ks, intensity) / ps;
 					//continue the tracing with new ray
 					vec3f dir = r.getDirection();
 					dir = dir + 2 * dir.dot(i.N) * i.N;
@@ -151,9 +151,9 @@ void PhotonMap::generatePhotons(PointCloud<T> &point, const Scene* scene, const 
 }
 
 
-PhotonMap::PhotonMap() : m_index(NULL), m_scene(NULL), m_nN(0) {}
+PhotonMap::PhotonMap() : m_index(NULL), m_scene(NULL), m_nN(0), m_nQuery(3), m_dAmplify(1.0), m_dConeAtten(-100) {}
 
-void PhotonMap::initialize(Scene* scene, const size_t N) {
+void PhotonMap::initialize(Scene* scene, const size_t N, const size_t queryNum, const double amplify, const double coneAtten) {
 	//generate the photons into point cloud
 	if (m_scene != scene || m_nN != N) {
 		generatePhotons(m_cloud, scene, N);
@@ -163,23 +163,24 @@ void PhotonMap::initialize(Scene* scene, const size_t N) {
 		m_index = new my_kd_tree_t(3 /*dim*/, m_cloud, KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
 		m_index->buildIndex();
 	}
+	m_nQuery = queryNum;
+	m_dAmplify = amplify;
 }
 
 //find the color of the given point
 vec3f PhotonMap::shade(const vec3f& point) {
 	//find the nearest n points
-	const size_t num_results = 30; //N = 10
-	const double atten_coeff = 1.0; //3.0
+	const size_t num_results = m_nQuery;
 	std::vector<size_t>   ret_index(num_results);
 	std::vector<double> out_dist_sqr(num_results);
 	m_index->knnSearch(point.n, num_results, &ret_index[0], &out_dist_sqr[0]);
 	//find the sphere that covers them
-	double radius = out_dist_sqr.back();
+	double radius_sqr = out_dist_sqr.back();
 	//calculate the intensity
 	vec3f ret;
 	for (int i = 0; i < ret_index.size(); ++i) {
-		ret += m_cloud.pts[ret_index[i]].energy * cone_filter(out_dist_sqr[i], -1000);
+		ret += m_cloud.pts[ret_index[i]].energy * cone_filter(sqrt(out_dist_sqr[i]), m_dConeAtten);
 	}
 #define PI 3.14159265358979
-	return ret / (PI * radius * radius) / atten_coeff;
+	return ret / (PI * radius_sqr) * m_dAmplify;
 }

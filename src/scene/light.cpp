@@ -114,9 +114,9 @@ ray PointLight::getPhoton(std::default_random_engine &generator) const
 		x1 = m_photon_dir_dist1(generator);
 		x2 = m_photon_dir_dist2(generator);
 	} while ((x0 = x1 * x1 + x2 * x2) >= 1);
-	float x = 2 * x1 * sqrt(1 - x0);
-	float y = 2 * x2 * sqrt(1 - x0);
-	float z = 1 - 2 * x0;
+	double x = 2 * x1 * sqrt(1 - x0);
+	double y = 2 * x2 * sqrt(1 - x0);
+	double z = 1 - 2 * x0;
 	vec3f dir(x, y, z); //this random direction is uniformly distributed on the unit sphere;
 	return ray(position, dir);
 }

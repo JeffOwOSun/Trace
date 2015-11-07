@@ -90,6 +90,9 @@ class PhotonMap {
 	Scene* m_scene;
 	PointCloud<double> m_cloud;
 	size_t m_nN;
+	size_t m_nQuery;
+	double m_dAmplify;
+	double m_dConeAtten;
 	
 	// construct a kd-tree index:
 	typedef KDTreeSingleIndexAdaptor<
@@ -102,7 +105,7 @@ class PhotonMap {
 
 public:
 	PhotonMap();
-	void initialize(Scene* scene, const size_t N);
+	void initialize(Scene* scene, const size_t N, const size_t queryNum, const double amplify, const double coneAtten);
 	vec3f shade(const vec3f& point);
 };
 
