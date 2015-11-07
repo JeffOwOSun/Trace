@@ -258,7 +258,7 @@ TraceUI::TraceUI() {
 	m_nSize = 150;
 	m_bTrace = true;
 	m_bCaustic = false;
-	m_nPhotonNumOrder = 6;
+	m_nPhotonNumOrder = 5;
 	m_nQueryNum = 3;
 	m_dConeAtten = -100;
 	m_dCausticAmplify = 1.0;
@@ -350,7 +350,7 @@ TraceUI::TraceUI() {
 		m_causticAmplifySlider->labelfont(FL_COURIER);
 		m_causticAmplifySlider->labelsize(12);
 		m_causticAmplifySlider->minimum(1);
-		m_causticAmplifySlider->maximum(10);
+		m_causticAmplifySlider->maximum(255);
 		m_causticAmplifySlider->step(0.1);
 		m_causticAmplifySlider->value(m_dCausticAmplify);
 		m_causticAmplifySlider->align(FL_ALIGN_RIGHT);

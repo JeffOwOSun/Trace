@@ -85,7 +85,7 @@ class PhotonMap {
 	};
 
 	template<typename T>
-	void generatePhotons(PointCloud<T> &cloud, const Scene* scene, const size_t N);
+	void generatePhotons(PointCloud<T> &cloud, const Scene* scene, size_t N);
 	
 	Scene* m_scene;
 	PointCloud<double> m_cloud;

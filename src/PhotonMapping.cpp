@@ -2,10 +2,21 @@
 using namespace std;
 
 template <typename T>
-void PhotonMap::generatePhotons(PointCloud<T> &point, const Scene* scene, const size_t N)
+void PhotonMap::generatePhotons(PointCloud<T> &point, const Scene* scene, size_t N)
 {
+	N = min(N, point.pts.max_size());
+	bool flag = true;
+	while (flag) {
+		try {
+			point.pts.resize(N); //this is good in terms of re-initializing
+			flag = false;
+		}
+		catch (std::bad_alloc &e) {
+			flag = true;
+			N /= 2;
+		}
+	}
 	std::cout << "Generating " << N << " photon map...";
-	point.pts.resize(N); //this is good in terms of re-initializing
 	//for randomized light source choosing
 	//vector for lights to facilitate direct access
 	std::vector<Light*> lights;
@@ -116,7 +127,12 @@ void PhotonMap::generatePhotons(PointCloud<T> &point, const Scene* scene, const 
 				}
 				//=====diffuse=====
 				else if (epsilon <= (pr + pt + ps + pd) / p) {
+#if 0
+#define _ALL_PHOTONS
+#endif
+#ifndef _ALL_PHOTONS
 					if (reflected_once) { //not direct illumination
+#endif
 						//diffused
 						intensity = prod(m.kd, intensity) / pd;
 						//remember the intensity
@@ -126,9 +142,11 @@ void PhotonMap::generatePhotons(PointCloud<T> &point, const Scene* scene, const 
 						point.pts[count].z = loc[2];
 						point.pts[count].energy = intensity;
 						++count;
-						if (!(count % 1000))
+						if (!(count % 10000))
 							std::cout << "generated " << count << " photons\n";
+#ifndef _ALL_PHOTONS
 					}
+#endif
 					break;
 				}
 				//=====absorption=====
@@ -143,10 +161,12 @@ void PhotonMap::generatePhotons(PointCloud<T> &point, const Scene* scene, const 
 		}
 	}
 	//average the energy value out
+#if 1
 	std::cout << "averaging the energy ...\n";
 	for (int i = 0; i < count; ++i) {
 		point.pts[i].energy /= count;
 	}
+#endif
 	std::cout << "done\n";
 }
 
