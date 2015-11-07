@@ -28,7 +28,7 @@ public:
 
 	vec3f getBackgroundImage(double x, double y);
 	void clearBackground();
-
+	double getFresnelCoeff(isect& i, const ray& r);
 	bool sceneLoaded();
 
 private:

@@ -45,10 +45,13 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 		vec3f Rdir = 2 * (i.N*-r.getDirection()) * i.N - (-r.getDirection());
 		ray R = ray(conPoint, Rdir);
 		
+
+		const double fresnel_coeff = getFresnelCoeff(i, r);
+		//cout << fresnel_coeff << endl;
 		// Reflection part
 		if (!i.getMaterial().kr.iszero()) 
 		{
-			shade += prod(i.getMaterial().kr, traceRay(scene, R, thresh, depth + 1));
+			shade += (fresnel_coeff*prod(i.getMaterial().kr, traceRay(scene, R, thresh, depth + 1)));
 		}
 	
 		// Refraction part
@@ -127,7 +130,7 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 					double cos_t = sqrt(1 - sin_t*sin_t);
 					vec3f Tdir = (indexRatio*cos_i - cos_t)*normal - indexRatio*-r.getDirection();
 					oppR = ray(conPoint, Tdir);
-					shade += prod(i.getMaterial().kt, traceRay(scene, oppR, thresh, depth + 1));
+					shade += (fresnel_coeff*prod(i.getMaterial().kt, traceRay(scene, oppR, thresh, depth + 1)));
 				}
 			}
 			
@@ -162,6 +165,82 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 		{
 			return vec3f(0.0, 0.0, 0.0);
 		}
+	}
+}
+
+double RayTracer::getFresnelCoeff(isect& i, const ray& r)
+{
+	if (i.obj->hasInterior())
+	{
+		double indexA, indexB;
+		if (i.N*r.getDirection() > RAY_EPSILON)
+		{
+			if (mediaHistory.empty())
+			{
+				indexA = 1.0;
+			}
+			else
+			{
+				indexA = mediaHistory.rbegin()->second.index;
+			}
+			mediaHistory.erase(i.obj->getOrder());
+			if (mediaHistory.empty())
+			{
+				indexB = 1.0;
+			}
+			else
+			{
+				indexB = mediaHistory.rbegin()->second.index;
+			}
+			mediaHistory.insert(make_pair(i.obj->getOrder(), i.getMaterial()));
+		}
+		// For ray get in the object
+		else
+		{
+			if (mediaHistory.empty())
+			{
+				indexA = 1.0;
+			}
+			else
+			{
+				indexA = mediaHistory.rbegin()->second.index;
+			}
+			mediaHistory.insert(make_pair(i.obj->getOrder(), i.getMaterial()));
+			indexB = mediaHistory.rbegin()->second.index;
+			mediaHistory.erase(i.obj->getOrder());
+		}
+
+		double r0 = (indexA - indexB) / (indexA + indexB);
+		r0 = r0 * r0;
+		const double dot_rn = i.N.dot(-r.getDirection());
+
+		if (indexA <= indexB)
+		{
+			return r0 + (1 - r0)*pow(1 - dot_rn, 5);
+		}
+		else
+		{
+			cout << "aaa" << endl;
+			return 1.0;
+			/*const double nr = indexA / indexB;
+			const double root = 1 - nr * nr * (1 - dot_rn * dot_rn);
+			if (root <= 0.0)
+			{
+				return 1.0;
+			}
+			else
+			{
+				cout << "now index is " << indexA << " " << indexB << endl;
+				
+				const double cos_theta_t = sqrt(1 - (indexA / indexB));
+				printf("And the ratio is %.25f\n", cos_theta_t);
+				return r0 + (1 - r0) * pow(1 - cos_theta_t, 5);
+			}*/
+		}
+	}
+	else
+	{
+		return 1.0;
 	}
 }
 
