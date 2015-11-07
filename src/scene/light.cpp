@@ -71,30 +71,29 @@ vec3f PointLight::getDirection( const vec3f& P ) const
 
 vec3f PointLight::shadowAttenuation(const vec3f& P) const
 { 
-	vec3f d = getDirection(P);
+	return _shadowAttenuation(P);
+}
 
-	// distance from P to this light
+vec3f PointLight::_shadowAttenuation(const vec3f& P) const
+{
 	double distance = (position - P).length();
-	// loop to get the attenuation
-	vec3f curP = P;
-	isect isecP;
-	vec3f ret = getColor(P);
+	const vec3f d = getDirection(P);
+	vec3f result = getColor(P);
+	vec3f curP = P; isect isecP;
 	ray r = ray(curP, d);
 	while (scene->intersect(r, isecP))
 	{
 		//prevent going beyond this light
-		if ((distance -= isecP.t) < RAY_EPSILON) return ret;
+		if ((distance -= isecP.t) < RAY_EPSILON) return result;
 		//if not transparent return black
 		if (isecP.getMaterial().kt.iszero()) return vec3f(0, 0, 0);
 		//use current intersection point as new light source
 		curP = r.at(isecP.t);
-		r = ray(curP, d);	
-		ret = prod(ret, isecP.getMaterial().kt);
+		r = ray(curP, d);
+		result = prod(result, isecP.getMaterial().kt);
 	}
-
-	return ret;
+	return result;
 }
-
 
 void PointLight::setDistanceAttenuation(const double constant,
 	const double linear, const double quadratic)
