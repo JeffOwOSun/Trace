@@ -112,11 +112,11 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 				}
 
 				double indexRatio = indexA / indexB;
-				double cos_i = normal*((-r.getDirection()).normalize());
+				double cos_i = max(min(normal*((-r.getDirection()).normalize()), 1.0), -1.0);
 				double sin_i = sqrt(1 - cos_i*cos_i);
 				double sin_t = sin_i * indexRatio; 
 
-				if (sin_t > 1.0 + RAY_EPSILON)
+				if (sin_t > 1.0)
 				{
 					TotalRefraction = true;
 				}

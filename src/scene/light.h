@@ -47,9 +47,10 @@ public:
 	/**
 	 * \brief Helper function, for easy implemente soft shadow
 	 * \param P the point which intersect
+	 * \param r the light
 	 * \return the shade effect on this point
 	 */
-	vec3f _shadowAttenuation(const vec3f& P) const;
+	vec3f _shadowAttenuation(const vec3f& P, const ray& r) const;
 
 protected:
 	vec3f position;
