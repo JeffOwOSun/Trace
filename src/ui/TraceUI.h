@@ -32,12 +32,16 @@ public:
 	Fl_Button*			m_renderButton;
 	Fl_Button*			m_stopButton;
 	Fl_Light_Button*	m_softShadowButton;
-
+	Fl_Light_Button*	m_fresnelSwitch;
 	TraceGLWindow*		m_traceGlWindow;
 
 	bool IsEnableSoftShadow() const
 	{
 		return m_is_enable_soft_shadow;
+	}
+	bool IsEnableFresnel() const
+	{
+		return m_is_enable_fresnel;
 	}
 	// member functions
 	void show();
@@ -53,7 +57,7 @@ private:
 	int			m_nSize;
 	int			m_nDepth;
 	bool		m_is_enable_soft_shadow;
-
+	bool		m_is_enable_fresnel;
 // static class members
 	static Fl_Menu_Item menuitems[];
 
@@ -65,12 +69,13 @@ private:
 	static void cb_clear_background_image(Fl_Menu_* o, void* v);
 	static void cb_exit(Fl_Menu_* o, void* v);
 	static void cb_about(Fl_Menu_* o, void* v);
-
+	static void cb_fresnelSwitch(Fl_Widget* o, void* v);
 	static void cb_exit2(Fl_Widget* o, void* v);
 
 	static void cb_sizeSlides(Fl_Widget* o, void* v);
 	static void cb_depthSlides(Fl_Widget* o, void* v);
 	static void cb_softShadowButton(Fl_Widget* o, void* v);
+		
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);

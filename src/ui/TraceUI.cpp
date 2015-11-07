@@ -100,6 +100,11 @@ void TraceUI::cb_softShadowButton(Fl_Widget *o, void*)
 	((TraceUI*)(o->user_data()))->m_is_enable_soft_shadow ^= true;
 }
 
+void TraceUI::cb_fresnelSwitch(Fl_Widget *o, void*)
+{
+	((TraceUI*)(o->user_data()))->m_is_enable_fresnel ^= true;
+}
+
 void TraceUI::cb_sizeSlides(Fl_Widget* o, void* v)
 {
 	TraceUI* pUI=(TraceUI*)(o->user_data());
@@ -239,6 +244,7 @@ TraceUI::TraceUI() {
 	m_nDepth = 0;
 	m_nSize = 150;
 	m_is_enable_soft_shadow = false;
+	m_is_enable_fresnel = false;
 	m_mainWindow = new Fl_Window(100, 40, 380, 200, "Ray <Not Loaded>");
 		m_mainWindow->user_data((void*)(this));	// record self to be used by static callback functions
 		// install menu bar
@@ -275,6 +281,11 @@ TraceUI::TraceUI() {
 		m_softShadowButton->user_data((void*)(this));
 		m_softShadowButton->value(0);
 		m_softShadowButton->callback(cb_softShadowButton);
+
+		m_fresnelSwitch = new Fl_Light_Button(240, 113, 70, 25, "Fresnel");
+		m_fresnelSwitch->user_data((void*)(this));
+		m_fresnelSwitch->value(0);
+		m_fresnelSwitch->callback(cb_fresnelSwitch);
 
 		m_renderButton = new Fl_Button(240, 27, 70, 25, "&Render");
 		m_renderButton->user_data((void*)(this));

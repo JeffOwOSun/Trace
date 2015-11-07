@@ -47,7 +47,7 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 		
 
 		const double fresnel_coeff = getFresnelCoeff(i, r);
-		//cout << fresnel_coeff << endl;
+		// cout << fresnel_coeff << endl;
 		// Reflection part
 		if (!i.getMaterial().kr.iszero()) 
 		{
@@ -130,7 +130,13 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 					double cos_t = sqrt(1 - sin_t*sin_t);
 					vec3f Tdir = (indexRatio*cos_i - cos_t)*normal - indexRatio*-r.getDirection();
 					oppR = ray(conPoint, Tdir);
-					shade += (fresnel_coeff*prod(i.getMaterial().kt, traceRay(scene, oppR, thresh, depth + 1)));
+					if (!traceUI->IsEnableFresnel()) {
+						shade += prod(i.getMaterial().kt, traceRay(scene, oppR, thresh, depth + 1));
+					}
+					else
+					{
+						shade += ((1-fresnel_coeff)*prod(i.getMaterial().kt, traceRay(scene, oppR, thresh, depth + 1)));
+					}
 				}
 			}
 			
@@ -170,6 +176,11 @@ vec3f RayTracer::traceRay( Scene *scene, const ray& r,
 
 double RayTracer::getFresnelCoeff(isect& i, const ray& r)
 {
+	if (!traceUI->IsEnableFresnel())
+	{
+		return 1.0;
+	}
+	vec3f normal;
 	if (i.obj->hasInterior())
 	{
 		double indexA, indexB;
@@ -192,6 +203,7 @@ double RayTracer::getFresnelCoeff(isect& i, const ray& r)
 			{
 				indexB = mediaHistory.rbegin()->second.index;
 			}
+			normal = -i.N;
 			mediaHistory.insert(make_pair(i.obj->getOrder(), i.getMaterial()));
 		}
 		// For ray get in the object
@@ -205,6 +217,7 @@ double RayTracer::getFresnelCoeff(isect& i, const ray& r)
 			{
 				indexA = mediaHistory.rbegin()->second.index;
 			}
+			normal = i.N;
 			mediaHistory.insert(make_pair(i.obj->getOrder(), i.getMaterial()));
 			indexB = mediaHistory.rbegin()->second.index;
 			mediaHistory.erase(i.obj->getOrder());
@@ -212,30 +225,26 @@ double RayTracer::getFresnelCoeff(isect& i, const ray& r)
 
 		double r0 = (indexA - indexB) / (indexA + indexB);
 		r0 = r0 * r0;
-		const double dot_rn = i.N.dot(-r.getDirection());
+
+		const double cos_i = max(min(i.N.dot(-r.getDirection().normalize()), 1.0),-1.0);
+		double sin_i = sqrt(1 - cos_i*cos_i);
+		double sin_t = sin_i * (indexA/ indexB);
 
 		if (indexA <= indexB)
 		{
-			return r0 + (1 - r0)*pow(1 - dot_rn, 5);
+			return r0 + (1 - r0)*pow(1 - cos_i, 5);
 		}
 		else
 		{
-			cout << "aaa" << endl;
-			return 1.0;
-			/*const double nr = indexA / indexB;
-			const double root = 1 - nr * nr * (1 - dot_rn * dot_rn);
-			if (root <= 0.0)
+			if (sin_t > 1.0)
 			{
 				return 1.0;
 			}
 			else
 			{
-				cout << "now index is " << indexA << " " << indexB << endl;
-				
-				const double cos_theta_t = sqrt(1 - (indexA / indexB));
-				printf("And the ratio is %.25f\n", cos_theta_t);
-				return r0 + (1 - r0) * pow(1 - cos_theta_t, 5);
-			}*/
+				double cos_t = sqrt(1 - sin_t*sin_t);
+				return r0 + (1 - r0) * pow(1 - cos_t, 5);
+			}
 		}
 	}
 	else
