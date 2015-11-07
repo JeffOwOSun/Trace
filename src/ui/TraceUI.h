@@ -28,6 +28,7 @@ public:
 
 	Fl_Slider*			m_sizeSlider;
 	Fl_Slider*			m_depthSlider;
+	Fl_Slider*			m_threadSlider;
 	// caustic
 	Fl_Light_Button*	m_traceButton;
 	Fl_Light_Button*	m_causticButton;
@@ -41,6 +42,7 @@ public:
 	Fl_Light_Button*	m_softShadowButton;
 	Fl_Light_Button*	m_fresnelSwitch;
 	TraceGLWindow*		m_traceGlWindow;
+	Fl_Button*		m_threadButton;
 
 	bool IsEnableSoftShadow() const
 	{
@@ -57,12 +59,17 @@ public:
 
 	int			getSize();
 	int			getDepth();
+	int	getThread() const
+	{
+		return m_thread;
+	}
 
 private:
 	RayTracer*	raytracer;
 
 	int			m_nSize;
 	int			m_nDepth;
+	int			m_thread;
 	//caustic
 	int			m_nPhotonNumOrder;
 	int			m_nQueryNum;
@@ -97,10 +104,13 @@ private:
 	static void cb_coneFilterSlides(Fl_Widget* o, void* v);
 	static void cb_causticAmplifySlides(Fl_Widget* o, void* v);
 	static void cb_softShadowButton(Fl_Widget* o, void* v);
-		
+	static void cb_threadSlides(Fl_Widget* o, void* v);
+	static void cb_threadrender(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);
+
+	static void RenderWorker(TraceUI *ui, const int from_y, const int to_y, const int w);
 };
 
 #endif
