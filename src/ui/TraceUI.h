@@ -42,6 +42,7 @@ public:
 	Fl_Light_Button*	m_softShadowButton;
 	Fl_Light_Button*	m_fresnelSwitch;
 	TraceGLWindow*		m_traceGlWindow;
+	Fl_Button*		m_threadButton;
 
 	bool IsEnableSoftShadow() const
 	{
@@ -104,6 +105,7 @@ private:
 	static void cb_causticAmplifySlides(Fl_Widget* o, void* v);
 	static void cb_softShadowButton(Fl_Widget* o, void* v);
 	static void cb_threadSlides(Fl_Widget* o, void* v);
+	static void cb_threadrender(Fl_Widget* o, void* v);
 
 	static void cb_render(Fl_Widget* o, void* v);
 	static void cb_stop(Fl_Widget* o, void* v);

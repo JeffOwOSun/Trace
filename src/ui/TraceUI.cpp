@@ -206,6 +206,85 @@ void TraceUI::cb_render(Fl_Widget* o, void* v)
 	TraceUI* pUI = ((TraceUI*)(o->user_data()));
 
 	if (pUI->raytracer->sceneLoaded()) {
+		int width = pUI->getSize();
+		int	height = (int)(width / pUI->raytracer->aspectRatio() + 0.5);
+		pUI->m_traceGlWindow->resizeWindow(width, height);
+
+		pUI->m_traceGlWindow->show();
+
+		pUI->raytracer->traceSetup(width, height, pUI->m_bTrace, pUI->m_bCaustic, pUI->m_nPhotonNumOrder, pUI->m_nQueryNum, pUI->m_dConeAtten, pUI->m_dCausticAmplify);
+
+		// Save the window label
+		const char *old_label = pUI->m_traceGlWindow->label();
+
+		// render the photon map
+
+		// start to render here	
+		done = false;
+		clock_t prev, now;
+		prev = clock();
+
+		pUI->m_traceGlWindow->refresh();
+		Fl::check();
+		Fl::flush();
+
+		for (int y = 0; y<height; y++) {
+			for (int x = 0; x<width; x++) {
+				if (done) break;
+
+				// current time
+				now = clock();
+
+				// check event every 1/2 second
+				if (((double)(now - prev) / CLOCKS_PER_SEC)>0.5) {
+					prev = now;
+
+					if (Fl::ready()) {
+						// refresh
+						pUI->m_traceGlWindow->refresh();
+						// check event
+						Fl::check();
+
+						if (Fl::damage()) {
+							Fl::flush();
+						}
+					}
+				}
+
+				pUI->raytracer->tracePixel(x, y);
+
+			}
+			if (done) break;
+
+			// flush when finish a row
+			if (Fl::ready()) {
+				// refresh
+				pUI->m_traceGlWindow->refresh();
+
+				if (Fl::damage()) {
+					Fl::flush();
+				}
+			}
+			// update the window label
+			sprintf(buffer, "(%d%%) %s", (int)((double)y / (double)height * 100.0), old_label);
+			pUI->m_traceGlWindow->label(buffer);
+
+		}
+		done = true;
+		pUI->m_traceGlWindow->refresh();
+
+		// Restore the window label
+		pUI->m_traceGlWindow->label(old_label);
+	}
+}
+
+void TraceUI::cb_threadrender(Fl_Widget* o, void* v)
+{
+	char buffer[256];
+
+	TraceUI* pUI = ((TraceUI*)(o->user_data()));
+
+	if (pUI->raytracer->sceneLoaded()) {
 
 		int width = pUI->getSize();
 		int	height = (int)(width / pUI->raytracer->aspectRatio() + 0.5);
@@ -233,11 +312,9 @@ void TraceUI::cb_render(Fl_Widget* o, void* v)
 		const int partition = height / pUI->getThread();
 		for (int i = 0; i < pUI->getThread() - 1; ++i)
 		{
-			workers.push_back(async(launch::async, RenderWorker, pUI,
-				partition * i, partition * (i + 1), width));
+			workers.push_back(async(launch::async, RenderWorker, pUI, partition * i, partition * (i + 1), width));
 		}
-		workers.push_back(async(launch::async, RenderWorker, pUI,
-			partition * (pUI->getThread() - 1), height, width));
+		workers.push_back(async(launch::async, RenderWorker, pUI, partition * (pUI->getThread() - 1), height, width));
 
 		bool is_all_joined = false;
 		do
@@ -338,7 +415,7 @@ TraceUI::TraceUI() {
 	m_is_enable_soft_shadow = false;
 	m_is_enable_fresnel = false;
 	m_thread = 1;
-	m_mainWindow = new Fl_Window(100, 40, 320, 240, "Ray <Not Loaded>");
+	m_mainWindow = new Fl_Window(100, 40, 320, 280, "Ray <Not Loaded>");
 		m_mainWindow->user_data((void*)(this));	// record self to be used by static callback functions
 		// install menu bar
 		m_menubar = new Fl_Menu_Bar(0, 0, 320, 25);
@@ -370,7 +447,7 @@ TraceUI::TraceUI() {
 		m_sizeSlider->align(FL_ALIGN_RIGHT);
 		m_sizeSlider->callback(cb_sizeSlides);
 
-		m_threadSlider = new Fl_Value_Slider(10, 80, 180, 20, "Thread");
+		m_threadSlider = new Fl_Value_Slider(10, 240, 180, 20, "Thread");
 		m_threadSlider->user_data((void*)(this));	// record self to be used by static callback functions
 		m_threadSlider->type(FL_HOR_NICE_SLIDER);
 		m_threadSlider->labelfont(FL_COURIER);
@@ -448,6 +525,10 @@ TraceUI::TraceUI() {
 		m_softShadowButton->user_data((void*)(this));
 		m_softShadowButton->value(0);
 		m_softShadowButton->callback(cb_softShadowButton);
+
+		m_threadButton = new Fl_Button(130, 205, 110, 20, "&Render");
+		m_threadButton->user_data((void*)(this));
+		m_threadButton->callback(cb_threadrender);
 
 		m_fresnelSwitch = new Fl_Light_Button(240, 85, 70, 25, "Fresnel");
 		m_fresnelSwitch->user_data((void*)(this));
